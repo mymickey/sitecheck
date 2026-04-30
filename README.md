@@ -29,3 +29,8 @@ make dmg
 - The settings window manages the five targets and the background benchmark interval, defaulting to 10 minutes.
 
 The probe method mirrors IPCheck.ing Connectivity: GET the target URL with `Cache-Control: no-store`, treat any HTTP response as reachable, and mark DNS/connect/timeout failures as unavailable.
+
+
+### roadmap
+- [ ] 折线图统计过去24小时的延迟
+- [ ] 增加 My IP 地址显示
