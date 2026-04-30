@@ -43,7 +43,7 @@ onMounted(() => {
 
       <main class="grid min-h-0 flex-1 grid-cols-[220px_minmax(0,1fr)]">
         <aside class="min-h-0 border-r bg-sidebar/65">
-          <div class="flex h-full flex-col px-4 py-4">
+          <div class="flex h-full flex-col px-4 py-4 pt-6">
             <div class="flex items-center gap-3 px-2 pb-4">
               <Avatar class="size-8 border border-border/70 bg-background" shape="circle">
                 <AvatarImage src="/logo.svg" alt="SiteCheck" />
