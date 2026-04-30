@@ -28,7 +28,8 @@ func main() {
 	}
 
 	monitor := NewConnectivityMonitor(nil)
-	siteCheck := NewSiteCheckService(store, monitor)
+	telemetry := NewTelemetryClient(aptabaseAppKey)
+	siteCheck := NewSiteCheckService(store, monitor, telemetry)
 
 	app := application.New(application.Options{
 		Name:        "SiteCheck",
@@ -67,6 +68,7 @@ func main() {
 	}
 
 	go func() {
+		telemetry.Track("app_started", nil)
 		time.Sleep(time.Second)
 		_, _ = siteCheck.Benchmark()
 	}()

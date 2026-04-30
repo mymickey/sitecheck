@@ -30,11 +30,11 @@ type MenuController struct {
 
 func NewMenuController(app *application.App, service *SiteCheckService, logo []byte, settings Settings) *MenuController {
 	controller := &MenuController{
-		app:      app,
-		service:  service,
-		logo:     logo,
-		settings: settings,
-		icons:    make(map[string][]byte),
+		app:            app,
+		service:        service,
+		logo:           logo,
+		settings:       settings,
+		icons:          make(map[string][]byte),
 		settingsWidth:  1024,
 		settingsHeight: 768,
 	}
@@ -63,6 +63,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 	controller.tray.AttachWindow(controller.menuWindow)
 
 	controller.menuWindow.OnWindowEvent(events.Mac.WindowDidBecomeKey, func(event *application.WindowEvent) {
+		controller.service.telemetry.Track("tray_opened", nil)
 		go controller.RunBenchmark()
 	})
 
