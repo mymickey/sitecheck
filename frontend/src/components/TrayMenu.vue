@@ -52,7 +52,7 @@ function fallbackLabel(name) {
 </script>
 
 <template>
-  <div class="tray-root flex h-screen bg-transparent p-1.5">
+  <div class="tray-root flex h-screen bg-transparent">
     <Card class="w-full overflow-hidden rounded-none border-0 shadow-none">
       <ScrollArea class="h-full">
         <CardContent class="flex flex-col gap-2 p-1.5">
@@ -61,11 +61,11 @@ function fallbackLabel(name) {
               <TableRow
                 v-for="target in trayTargets"
                 :key="target.id"
-                class="hover:bg-muted/20"
+                class="hover:bg-muted/20 border-none"
               >
                 <TableCell class="py-2">
                   <div class="flex items-center gap-2.5">
-                    <Avatar class="size-7" shape="square">
+                    <Avatar class="size-5 rounded-sm" shape="square">
                       <AvatarImage :src="target.iconUrl" :alt="target.name" />
                       <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
                     </Avatar>
@@ -103,5 +103,12 @@ function fallbackLabel(name) {
 <style scoped>
 .tray-root {
   -webkit-app-region: no-drag;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tray-root :deep(*) {
+  user-select: none;
+  -webkit-user-select: none;
 }
 </style>

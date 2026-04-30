@@ -63,7 +63,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 	})
 
 	controller.menuWindow.OnWindowEvent(events.Mac.WindowDidResignKey, func(event *application.WindowEvent) {
-		controller.menuWindow.Hide()
+		// controller.menuWindow.Hide()
 	})
 
 	go controller.refreshIcons(settings.Targets)
