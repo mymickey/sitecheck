@@ -3,23 +3,13 @@ import { defineStore } from 'pinia'
 import { Events } from '@wailsio/runtime'
 import { SiteCheckService } from '../../bindings/sitecheck'
 
-const intervalStorageKey = 'sitecheck.intervalMinutes'
+let toastTimer = 0
 
 function defaultClientSettings() {
   return {
     intervalMinutes: 10,
     targets: [],
   }
-}
-
-function readStoredIntervalMinutes() {
-  const raw = window.localStorage.getItem(intervalStorageKey)
-  const interval = Number(raw)
-  return Number.isFinite(interval) && interval > 0 ? interval : 10
-}
-
-function writeStoredIntervalMinutes(value) {
-  window.localStorage.setItem(intervalStorageKey, String(value))
 }
 
 function normalizeIntervalMinutes(value) {
@@ -35,6 +25,8 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
   const saving = shallowRef(false)
   const message = shallowRef('')
   const messageTone = shallowRef('muted')
+  const toastMessage = shallowRef('')
+  const toastTone = shallowRef('muted')
 
   const canSave = computed(() => !saving.value && settings.value.targets.length === 5)
 
@@ -43,13 +35,19 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     messageTone.value = tone
   }
 
+  function showToast(text, tone = 'muted') {
+    toastMessage.value = text
+    toastTone.value = tone
+    window.clearTimeout(toastTimer)
+    toastTimer = window.setTimeout(() => {
+      toastMessage.value = ''
+      toastTone.value = 'muted'
+    }, 2200)
+  }
+
   async function loadSettings() {
     try {
-      const nextSettings = await SiteCheckService.GetSettings()
-      settings.value = {
-        ...nextSettings,
-        intervalMinutes: readStoredIntervalMinutes(),
-      }
+      settings.value = await SiteCheckService.GetSettings()
       setMessage('')
     } catch (error) {
       setMessage(String(error), 'danger')
@@ -58,10 +56,22 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
 
   function setIntervalMinutes(value) {
     const nextInterval = normalizeIntervalMinutes(value)
-    writeStoredIntervalMinutes(nextInterval)
     settings.value = {
       ...settings.value,
       intervalMinutes: nextInterval,
+    }
+  }
+
+  async function updateIntervalMinutes(value) {
+    setIntervalMinutes(value)
+    saving.value = true
+    try {
+      settings.value = await SiteCheckService.SaveSettings(settings.value)
+      showToast(`Go received ${settings.value.intervalMinutes}m interval`, 'success')
+    } catch (error) {
+      showToast(String(error), 'danger')
+    } finally {
+      saving.value = false
     }
   }
 
@@ -91,7 +101,6 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     loading.value = true
     try {
       report.value = await SiteCheckService.Benchmark()
-      setMessage('Benchmark complete', 'success')
     } catch (error) {
       setMessage(String(error), 'danger')
     } finally {
@@ -115,9 +124,12 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     saving,
     message,
     messageTone,
+    toastMessage,
+    toastTone,
     canSave,
     loadSettings,
     setIntervalMinutes,
+    updateIntervalMinutes,
     updateTarget,
     saveSettings,
     benchmark,

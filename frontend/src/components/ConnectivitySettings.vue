@@ -102,7 +102,7 @@ function hostLabel(target) {
       :average-label="averageLabel"
       :loading="store.loading"
       @benchmark="store.benchmark"
-      @update-interval="store.setIntervalMinutes"
+      @update-interval="store.updateIntervalMinutes"
     />
   </section>
 </template>

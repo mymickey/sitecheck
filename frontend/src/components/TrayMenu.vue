@@ -4,7 +4,6 @@ import { LogOut, Settings } from "lucide-vue-next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -75,27 +74,27 @@ function handleVisibilityChange() {
 
 <template>
   <div class="tray-root flex h-screen bg-transparent">
-    <Card class="w-full overflow-hidden rounded-none border-0 shadow-none">
+    <div class="w-full overflow-hidden border border-border/70 bg-background/98 shadow-[0_12px_30px_-16px_rgba(15,23,42,0.22)] backdrop-blur-sm">
       <div ref="scrollContainer" class="tray-scroll h-full overflow-y-auto">
-        <CardContent class="flex flex-col gap-2 p-1.5">
+        <div class="flex flex-col gap-2 p-1.5">
           <Table>
             <TableBody>
               <TableRow
                 v-for="target in trayTargets"
                 :key="target.id"
-                class="hover:bg-muted/20 border-none"
+                class="border-none hover:bg-muted/20"
               >
-                <TableCell class="py-2">
-                  <div class="flex items-center gap-2.5">
+                <TableCell class="py-1.5">
+                  <div class="flex items-center gap-2">
                     <Avatar class="size-5 rounded-sm" shape="square">
                       <AvatarImage :src="target.iconUrl" :alt="target.name" />
                       <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
                     </Avatar>
-                    <span class="truncate text-[13px] font-medium">{{ target.name }}</span>
+                    <span class="truncate text-[12px] font-medium">{{ target.name }}</span>
                   </div>
                 </TableCell>
-                <TableCell class="w-24 py-2 text-right">
-                  <Badge variant="outline" class="rounded-full text-[11px]">
+                <TableCell class="w-20 py-1.5 text-right">
+                  <Badge variant="secondary" class="h-5 rounded-sm px-1.5 text-[10px] tabular-nums">
                     <Spinner v-if="store.loading" data-icon="inline-start" />
                     {{ target.latency }}
                   </Badge>
@@ -107,18 +106,28 @@ function handleVisibilityChange() {
           <Separator />
 
           <div class="flex flex-col gap-1">
-            <Button variant="ghost" size="sm" class="h-8 justify-start rounded-md px-2.5 font-normal" @click="handleShowSettings">
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-7 justify-start rounded-sm px-2 text-[12px] font-normal"
+              @click="handleShowSettings"
+            >
               <Settings data-icon="inline-start" />
               Settings
             </Button>
-            <Button variant="ghost" size="sm" class="h-8 justify-start rounded-md px-2.5 font-normal" @click="handleQuit">
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-7 justify-start rounded-sm px-2 text-[12px] font-normal"
+              @click="handleQuit"
+            >
               <LogOut data-icon="inline-start" />
               Quit
             </Button>
           </div>
-        </CardContent>
+        </div>
       </div>
-    </Card>
+    </div>
   </div>
 </template>
 
