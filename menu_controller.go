@@ -23,6 +23,8 @@ type MenuController struct {
 	icons          map[string][]byte
 	isBenchmarking bool
 	menuWindow     *application.WebviewWindow
+	settingsWidth  int
+	settingsHeight int
 	mu             sync.Mutex
 }
 
@@ -33,6 +35,8 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 		logo:     logo,
 		settings: settings,
 		icons:    make(map[string][]byte),
+		settingsWidth:  1024,
+		settingsHeight: 768,
 	}
 
 	icon, _ := RenderTrayIcon(logo)
@@ -107,10 +111,12 @@ func (c *MenuController) ShowSettings() {
 	c.window = c.app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:             "settings",
 		Title:            "SiteCheck Settings",
-		Width:            1420,
-		Height:           920,
-		MinWidth:         1024,
-		MinHeight:        768,
+		Width:            c.settingsWidth,
+		Height:           c.settingsHeight,
+		MinWidth:         512,
+		MinHeight:        384,
+		MaxWidth:         1024,
+		MaxHeight:        768,
 		URL:              "/",
 		BackgroundColour: application.NewRGB(250, 250, 250),
 		Mac: application.MacWindow{
@@ -120,7 +126,16 @@ func (c *MenuController) ShowSettings() {
 		},
 	})
 
+	c.window.OnWindowEvent(events.Common.WindowDidResize, func(event *application.WindowEvent) {
+		width, height := c.window.Size()
+		c.settingsWidth = width
+		c.settingsHeight = height
+	})
+
 	c.window.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
+		width, height := c.window.Size()
+		c.settingsWidth = width
+		c.settingsHeight = height
 		c.window = nil
 	})
 }

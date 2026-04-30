@@ -1,12 +1,12 @@
 <script setup>
+import { ref, watch } from "vue";
 import { CirclePlay, Clock3 } from "lucide-vue-next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
-defineProps({
+const props = defineProps({
   targetRows: { type: Array, required: true },
   intervalMinutes: { type: Number, required: true },
   availableTargets: { type: Number, required: true },
@@ -18,6 +18,45 @@ const emit = defineEmits(["benchmark", "update-interval"]);
 
 function fallbackLabel(name) {
   return (name || "?").slice(0, 2).toUpperCase();
+}
+
+const intervalDraft = ref("10");
+
+watch(
+  () => props.intervalMinutes,
+  (value) => {
+    intervalDraft.value = String(value || 10);
+  },
+  { immediate: true },
+);
+
+function handleIntervalInput(event) {
+  intervalDraft.value = event.target.value;
+}
+
+function handleIntervalBlur() {
+  const interval = Number(intervalDraft.value);
+  if (!Number.isFinite(interval)) {
+    intervalDraft.value = "10";
+    emit("update-interval", 10);
+    return;
+  }
+
+  if (interval < 1) {
+    intervalDraft.value = "1";
+    emit("update-interval", 1);
+    return;
+  }
+
+  if (interval > 99) {
+    intervalDraft.value = "99";
+    emit("update-interval", 99);
+    return;
+  }
+
+  const normalized = Math.trunc(interval);
+  intervalDraft.value = String(normalized);
+  emit("update-interval", normalized);
 }
 </script>
 
@@ -32,16 +71,16 @@ function fallbackLabel(name) {
         </Button>
         <div class="flex h-9 items-center gap-2 rounded-md border bg-background px-3">
           <Clock3 class="size-4 text-muted-foreground" />
-          <span class="text-sm text-muted-foreground">Interval</span>
-          <Input
+          <input
             type="number"
             min="1"
-            max="1440"
-            class="h-full w-20 border-0 bg-transparent px-0 text-right text-sm shadow-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
-            :value="intervalMinutes"
-            @input="emit('update-interval', $event.target.value)"
+            max="99"
+            :value="intervalDraft"
+            class="h-full w-10 border-0 bg-transparent px-0 text-right text-sm shadow-none outline-none ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            @input="handleIntervalInput"
+            @blur="handleIntervalBlur"
           />
-          <span class="text-sm text-muted-foreground">min</span>
+          <span class="text-sm text-muted-foreground">m</span>
         </div>
       </div>
 
@@ -77,3 +116,6 @@ function fallbackLabel(name) {
     </div>
   </section>
 </template>
+
+<style scoped>
+</style>

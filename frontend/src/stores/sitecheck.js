@@ -3,11 +3,29 @@ import { defineStore } from 'pinia'
 import { Events } from '@wailsio/runtime'
 import { SiteCheckService } from '../../bindings/sitecheck'
 
+const intervalStorageKey = 'sitecheck.intervalMinutes'
+
 function defaultClientSettings() {
   return {
     intervalMinutes: 10,
     targets: [],
   }
+}
+
+function readStoredIntervalMinutes() {
+  const raw = window.localStorage.getItem(intervalStorageKey)
+  const interval = Number(raw)
+  return Number.isFinite(interval) && interval > 0 ? interval : 10
+}
+
+function writeStoredIntervalMinutes(value) {
+  window.localStorage.setItem(intervalStorageKey, String(value))
+}
+
+function normalizeIntervalMinutes(value) {
+  const interval = Number(value)
+  if (!Number.isFinite(interval) || interval < 1) return 10
+  return Math.min(Math.trunc(interval), 99)
 }
 
 export const useSiteCheckStore = defineStore('sitecheck', () => {
@@ -27,7 +45,11 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
 
   async function loadSettings() {
     try {
-      settings.value = await SiteCheckService.GetSettings()
+      const nextSettings = await SiteCheckService.GetSettings()
+      settings.value = {
+        ...nextSettings,
+        intervalMinutes: readStoredIntervalMinutes(),
+      }
       setMessage('')
     } catch (error) {
       setMessage(String(error), 'danger')
@@ -35,10 +57,11 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
   }
 
   function setIntervalMinutes(value) {
-    const interval = Number(value)
+    const nextInterval = normalizeIntervalMinutes(value)
+    writeStoredIntervalMinutes(nextInterval)
     settings.value = {
       ...settings.value,
-      intervalMinutes: Number.isFinite(interval) ? interval : 10,
+      intervalMinutes: nextInterval,
     }
   }
 
