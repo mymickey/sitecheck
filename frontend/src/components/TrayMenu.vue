@@ -1,11 +1,10 @@
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { LogOut, Settings } from "lucide-vue-next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -18,6 +17,7 @@ import { useSiteCheckStore } from "@/stores/sitecheck";
 import { SiteCheckService } from "../../bindings/sitecheck";
 
 const store = useSiteCheckStore();
+const scrollContainer = ref(null);
 
 const trayTargets = computed(() =>
   store.settings.targets.map((target) => {
@@ -36,6 +36,14 @@ const trayTargets = computed(() =>
 
 onMounted(() => {
   store.loadSettings();
+  resetScrollTop();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("focus", resetScrollTop);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  window.removeEventListener("focus", resetScrollTop);
 });
 
 function handleShowSettings() {
@@ -49,12 +57,26 @@ function handleQuit() {
 function fallbackLabel(name) {
   return (name || "?").slice(0, 2).toUpperCase();
 }
+
+function resetScrollTop() {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = 0;
+    }
+  });
+}
+
+function handleVisibilityChange() {
+  if (!document.hidden) {
+    resetScrollTop();
+  }
+}
 </script>
 
 <template>
   <div class="tray-root flex h-screen bg-transparent">
     <Card class="w-full overflow-hidden rounded-none border-0 shadow-none">
-      <ScrollArea class="h-full">
+      <div ref="scrollContainer" class="tray-scroll h-full overflow-y-auto">
         <CardContent class="flex flex-col gap-2 p-1.5">
           <Table>
             <TableBody>
@@ -95,7 +117,7 @@ function fallbackLabel(name) {
             </Button>
           </div>
         </CardContent>
-      </ScrollArea>
+      </div>
     </Card>
   </div>
 </template>
@@ -110,5 +132,14 @@ function fallbackLabel(name) {
 .tray-root :deep(*) {
   user-select: none;
   -webkit-user-select: none;
+}
+
+.tray-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tray-scroll::-webkit-scrollbar {
+  display: none;
 }
 </style>

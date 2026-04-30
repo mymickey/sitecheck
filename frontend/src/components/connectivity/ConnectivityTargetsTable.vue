@@ -64,7 +64,7 @@ function handleIntervalBlur() {
   <section class="flex flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <Button size="sm" class="rounded-md" :disabled="loading" @click="emit('benchmark')">
+        <Button size="sm" class="rounded-md cursor-pointer" :disabled="loading" @click="emit('benchmark')">
           <Spinner v-if="loading" data-icon="inline-start" />
           <CirclePlay v-else data-icon="inline-start" />
           {{ loading ? "Benchmarking" : "Benchmark" }}

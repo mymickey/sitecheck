@@ -13,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useSiteCheckStore } from "@/stores/sitecheck";
 import { SiteCheckService } from "../bindings/sitecheck";
@@ -91,11 +90,11 @@ function handleQuit() {
 
         <section class="flex min-h-0 flex-col">
           <Card class="flex min-h-0 flex-1 flex-col rounded-none border-0 bg-transparent shadow-none">
-            <ScrollArea class="flex-1">
+            <div class="flex-1 overflow-y-auto">
               <div class="p-5 pt-4">
                 <component :is="activeComponent" />
               </div>
-            </ScrollArea>
+            </div>
           </Card>
         </section>
       </main>
