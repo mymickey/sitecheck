@@ -34,3 +34,4 @@ The probe method mirrors IPCheck.ing Connectivity: GET the target URL with `Cach
 ### roadmap
 - [ ] 折线图统计过去24小时的延迟
 - [ ] 增加 My IP 地址显示
+- [ ] 系统主题自适应

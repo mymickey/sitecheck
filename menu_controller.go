@@ -40,7 +40,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 	}
 
 	icon, _ := RenderTrayIcon(logo)
-	controller.tray = app.SystemTray.New().SetIcon(icon)
+	controller.tray = app.SystemTray.New().SetTemplateIcon(icon)
 	controller.tray.SetTooltip("SiteCheck")
 	controller.tray.SetLabel("-- | --")
 
@@ -88,7 +88,7 @@ func (c *MenuController) UpdateReport(report BenchmarkReport) {
 	c.mu.Unlock()
 
 	if icon, err := RenderTrayIcon(c.logo); err == nil {
-		c.tray.SetIcon(icon)
+		c.tray.SetTemplateIcon(icon)
 	}
 
 	fast, slow := "--", "--"
