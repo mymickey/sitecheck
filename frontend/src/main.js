@@ -1,4 +1,3 @@
-import '../node_modules/@heroui/styles/dist/heroui.min.css'
 import './style.css'
 import '../bindings/github.com/wailsapp/wails/v3/internal/eventcreate.js'
 

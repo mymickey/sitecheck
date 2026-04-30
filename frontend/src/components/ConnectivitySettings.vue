@@ -1,116 +1,108 @@
 <script setup>
-import { computed } from 'vue'
-import { Play, RotateCw, Save } from 'lucide-vue-next'
-import { useSiteCheckStore } from '../stores/sitecheck'
+import { computed } from "vue";
+import ConnectivityTargetsTable from "@/components/connectivity/ConnectivityTargetsTable.vue";
+import { useSiteCheckStore } from "@/stores/sitecheck";
 
-const store = useSiteCheckStore()
+const store = useSiteCheckStore();
 
 const resultsById = computed(() => {
-  const entries = store.report?.results || []
-  return Object.fromEntries(entries.map((result) => [result.id, result]))
-})
+  const entries = store.report?.results || [];
 
-const summaryLabel = computed(() => {
-  if (!store.report?.summary?.hasResults) return { fast: '--', slow: '--' }
-  return {
-    fast: `${store.report.summary.fastestMs}ms`,
-    slow: `${store.report.summary.slowestMs}ms`,
-  }
-})
+  return Object.fromEntries(entries.map((result) => [result.id, result]));
+});
 
-function targetResult(target) {
-  return resultsById.value[target.id] || null
+const targetRows = computed(() =>
+  store.settings.targets.map((target, index) => {
+    const result = resultsById.value[target.id] || null;
+
+    return {
+      ...target,
+      index,
+      host: hostLabel(target),
+      statusText: resultText(result),
+      statusVariant: statusVariant(result),
+      detail: detailText(result),
+      progress: progressValue(result),
+    };
+  }),
+);
+
+const availableTargets = computed(
+  () =>
+    targetRows.value.filter((target) => target.statusText.endsWith("ms")).length,
+);
+
+const averageLabel = computed(() => {
+  const values = targetRows.value
+    .map((target) => latencyValue(target.statusText))
+    .filter(Boolean);
+
+  if (!values.length) return "No benchmark yet";
+
+  const average = Math.round(
+    values.reduce((total, value) => total + value, 0) / values.length,
+  );
+
+  return `${average}ms average`;
+});
+
+function latencyValue(statusText) {
+  return statusText.endsWith("ms") ? Number.parseInt(statusText, 10) : 0;
 }
 
-function resultTone(result) {
-  if (!result) return 'idle'
-  if (result.status === 'Available') return result.latencyMs < 200 ? 'success' : 'warning'
-  return 'danger'
+function statusVariant(result) {
+  if (!result) return "outline";
+  if (result.status === "Available") {
+    return result.latencyMs < 200 ? "default" : "secondary";
+  }
+
+  return "destructive";
 }
 
 function resultText(result) {
-  if (!result) return 'Waiting'
-  if (result.status === 'Available') return `${result.latencyMs}ms`
-  return result.status
+  if (!result) return "Waiting";
+  if (result.status === "Available") return `${result.latencyMs}ms`;
+
+  return result.status;
+}
+
+function detailText(result) {
+  if (!result) return "Awaiting the first benchmark cycle.";
+  if (result.status === "Available") return "Probe reachable from the current route.";
+
+  return "Connection, DNS, or timeout failure in the latest probe.";
+}
+
+function progressValue(result) {
+  if (!result || result.status !== "Available") return 8;
+
+  const all = (store.report?.results || [])
+    .filter((entry) => entry.status === "Available")
+    .map((entry) => entry.latencyMs);
+  const maximum = Math.max(...all, 1);
+
+  return Math.max(Math.round((result.latencyMs / maximum) * 100), 12);
+}
+
+function hostLabel(target) {
+  try {
+    return new URL(target.url).hostname;
+  } catch {
+    return target.url;
+  }
 }
 </script>
 
 <template>
-  <form class="panel connectivity" @submit.prevent="store.saveSettings">
-    <header class="panel__header">
-      <div>
-        <h1 class="panel__title">Connectivity</h1>
-        <p class="panel__subtitle">Network targets and background benchmark interval.</p>
-      </div>
-      <div class="toolbar">
-        <button
-          class="button button--secondary"
-          type="button"
-          :disabled="store.loading"
-          @click="store.benchmark"
-        >
-          <component :is="store.loading ? RotateCw : Play" class="button__icon" aria-hidden="true" />
-          <span>Benchmark</span>
-        </button>
-        <button class="button button--primary" type="submit" :disabled="store.saving">
-          <Save class="button__icon" aria-hidden="true" />
-          <span>Save</span>
-        </button>
-      </div>
-    </header>
-
-    <div class="metric-strip" aria-label="Latest benchmark summary">
-      <div class="metric">
-        <span class="metric__label">Fastest</span>
-        <strong>{{ summaryLabel.fast }}</strong>
-      </div>
-      <div class="metric">
-        <span class="metric__label">Slowest</span>
-        <strong>{{ summaryLabel.slow }}</strong>
-      </div>
-      <label class="interval-field">
-        <span>Interval</span>
-        <input
-          class="input input--secondary interval-field__input"
-          type="number"
-          min="1"
-          max="1440"
-          :value="store.settings.intervalMinutes"
-          @input="store.setIntervalMinutes($event.target.value)"
-        >
-        <span>min</span>
-      </label>
-    </div>
-
-    <div class="target-list">
-      <article v-for="(target, index) in store.settings.targets" :key="target.id" class="target-row">
-        <img class="target-row__icon" :src="target.iconUrl" alt="" aria-hidden="true">
-        <div class="target-row__fields">
-          <label class="field">
-            <span>Name</span>
-            <input
-              class="input input--secondary input--full-width"
-              :value="target.name"
-              @input="store.updateTarget(index, { name: $event.target.value })"
-            >
-          </label>
-          <label class="field field--url">
-            <span>URL</span>
-            <input
-              class="input input--secondary input--full-width"
-              :value="target.url"
-              @input="store.updateTarget(index, { url: $event.target.value })"
-            >
-          </label>
-        </div>
-        <span class="status-chip" :data-tone="resultTone(targetResult(target))">
-          {{ resultText(targetResult(target)) }}
-        </span>
-      </article>
-    </div>
-
-    <footer class="panel__footer">
-      <span class="message" :data-tone="store.messageTone">{{ store.message }}</span>
-    </footer>
-  </form>
+  <section class="flex flex-col gap-6">
+    <ConnectivityTargetsTable
+      :target-rows="targetRows"
+      :interval-minutes="store.settings.intervalMinutes"
+      :available-targets="availableTargets"
+      :average-label="averageLabel"
+      :loading="store.loading"
+      @benchmark="store.benchmark"
+      @update-interval="store.setIntervalMinutes"
+    />
+  </section>
 </template>

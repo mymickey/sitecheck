@@ -1,135 +1,107 @@
 <script setup>
-import { onMounted } from 'vue'
-import { Settings, LogOut } from 'lucide-vue-next'
-import { useSiteCheckStore } from '../stores/sitecheck'
-import { SiteCheckService } from '../../bindings/sitecheck'
+import { computed, onMounted } from "vue";
+import { LogOut, Settings } from "lucide-vue-next";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "@/components/ui/table";
+import { useSiteCheckStore } from "@/stores/sitecheck";
+import { SiteCheckService } from "../../bindings/sitecheck";
 
-const store = useSiteCheckStore()
+const store = useSiteCheckStore();
+
+const trayTargets = computed(() =>
+  store.settings.targets.map((target) => {
+    const result = store.report?.results?.find((entry) => entry.id === target.id);
+
+    return {
+      ...target,
+      latency: store.loading
+        ? "Testing..."
+        : result?.latencyMs
+          ? `${result.latencyMs}ms`
+          : "--",
+    };
+  }),
+);
 
 onMounted(() => {
-  store.loadSettings()
-})
+  store.loadSettings();
+});
 
-const handleShowSettings = () => {
-  SiteCheckService.ShowSettings()
+function handleShowSettings() {
+  SiteCheckService.ShowSettings();
 }
 
-const handleQuit = () => {
-  SiteCheckService.Quit()
+function handleQuit() {
+  SiteCheckService.Quit();
+}
+
+function fallbackLabel(name) {
+  return (name || "?").slice(0, 2).toUpperCase();
 }
 </script>
 
 <template>
-  <div class="tray-menu">
-    <div class="tray-menu__list">
-      <div v-for="target in store.settings.targets" :key="target.id" class="tray-menu__item tray-menu__item--disabled">
-        <div class="tray-menu__target">
-          <img v-if="target.iconUrl" :src="target.iconUrl" class="tray-menu__icon" alt="">
-          <span class="tray-menu__name">{{ target.name }}</span>
-        </div>
-        <span class="tray-menu__latency" :class="{ 'tray-menu__latency--loading': store.loading }">
-          {{ store.loading ? 'Testing...' : (store.report?.results?.find(r => r.id === target.id)?.latencyMs ? `${store.report.results.find(r => r.id === target.id).latencyMs}ms` : '--') }}
-        </span>
-      </div>
-    </div>
+  <div class="tray-root flex h-screen bg-transparent p-1.5">
+    <Card class="w-full overflow-hidden rounded-none border-0 shadow-none">
+      <ScrollArea class="h-full">
+        <CardContent class="flex flex-col gap-2 p-1.5">
+          <Table>
+            <TableBody>
+              <TableRow
+                v-for="target in trayTargets"
+                :key="target.id"
+                class="hover:bg-muted/20"
+              >
+                <TableCell class="py-2">
+                  <div class="flex items-center gap-2.5">
+                    <Avatar class="size-7" shape="square">
+                      <AvatarImage :src="target.iconUrl" :alt="target.name" />
+                      <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
+                    </Avatar>
+                    <span class="truncate text-[13px] font-medium">{{ target.name }}</span>
+                  </div>
+                </TableCell>
+                <TableCell class="w-24 py-2 text-right">
+                  <Badge variant="outline" class="rounded-full text-[11px]">
+                    <Spinner v-if="store.loading" data-icon="inline-start" />
+                    {{ target.latency }}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
 
-    <div class="tray-menu__separator"></div>
+          <Separator />
 
-    <div class="tray-menu__list">
-      <button class="tray-menu__item tray-menu__button" @click="handleShowSettings">
-        <div class="tray-menu__target">
-          <Settings class="tray-menu__icon" />
-          <span>Settings</span>
-        </div>
-      </button>
-      <button class="tray-menu__item tray-menu__button" @click="handleQuit">
-        <div class="tray-menu__target">
-          <LogOut class="tray-menu__icon" />
-          <span>Quit</span>
-        </div>
-      </button>
-    </div>
+          <div class="flex flex-col gap-1">
+            <Button variant="ghost" size="sm" class="h-8 justify-start rounded-md px-2.5 font-normal" @click="handleShowSettings">
+              <Settings data-icon="inline-start" />
+              Settings
+            </Button>
+            <Button variant="ghost" size="sm" class="h-8 justify-start rounded-md px-2.5 font-normal" @click="handleQuit">
+              <LogOut data-icon="inline-start" />
+              Quit
+            </Button>
+          </div>
+        </CardContent>
+      </ScrollArea>
+    </Card>
   </div>
 </template>
 
 <style scoped>
-.tray-menu {
-  width: 100%;
-  height: 100vh;
-  padding: 12px;
-  background: transparent;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  user-select: none;
-  -webkit-user-select: none;
+.tray-root {
   -webkit-app-region: no-drag;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.tray-menu__list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tray-menu__item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  border: none;
-  background: transparent;
-  width: 100%;
-  text-align: left;
-  color: inherit;
-  cursor: default;
-}
-
-.tray-menu__item--disabled {
-  opacity: 0.9;
-}
-
-.tray-menu__button {
-  cursor: pointer;
-}
-
-.tray-menu__button:hover {
-  background: #007aff;
-  color: #fff;
-}
-
-.tray-menu__target {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.tray-menu__icon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-}
-
-.tray-menu__name {
-  font-weight: 500;
-}
-
-.tray-menu__latency {
-  font-family: var(--font-mono);
-  color: var(--muted);
-}
-
-.tray-menu__latency--loading {
-  font-style: italic;
-  font-size: 11px;
-}
-
-.tray-menu__separator {
-  height: 1px;
-  background: var(--separator);
-  margin: 6px 4px;
 }
 </style>

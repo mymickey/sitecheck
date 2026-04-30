@@ -107,10 +107,10 @@ func (c *MenuController) ShowSettings() {
 	c.window = c.app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:             "settings",
 		Title:            "SiteCheck Settings",
-		Width:            880,
-		Height:           580,
-		MinWidth:         760,
-		MinHeight:        520,
+		Width:            1420,
+		Height:           920,
+		MinWidth:         1080,
+		MinHeight:        720,
 		URL:              "/",
 		BackgroundColour: application.NewRGB(250, 250, 250),
 		Mac: application.MacWindow{
