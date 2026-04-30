@@ -77,7 +77,7 @@ function handleQuit() {
                 </Button>
               </div>
 
-              <div class="mt-auto flex flex-col gap-2">
+              <div class="mt-auto flex flex-col gap-2 hidden" >
                 <Separator />
                 <div class="px-2 pt-1 text-xs text-muted-foreground">App</div>
                 <Button variant="ghost" size="sm" class="h-9 justify-start rounded-md font-normal" @click="handleQuit">

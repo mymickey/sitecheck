@@ -63,7 +63,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 	})
 
 	controller.menuWindow.OnWindowEvent(events.Mac.WindowDidResignKey, func(event *application.WindowEvent) {
-		// controller.menuWindow.Hide()
+		controller.menuWindow.Hide()
 	})
 
 	go controller.refreshIcons(settings.Targets)
@@ -109,8 +109,8 @@ func (c *MenuController) ShowSettings() {
 		Title:            "SiteCheck Settings",
 		Width:            1420,
 		Height:           920,
-		MinWidth:         1080,
-		MinHeight:        720,
+		MinWidth:         1024,
+		MinHeight:        768,
 		URL:              "/",
 		BackgroundColour: application.NewRGB(250, 250, 250),
 		Mac: application.MacWindow{

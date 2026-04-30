@@ -30,14 +30,14 @@ function fallbackLabel(name) {
           <CirclePlay v-else data-icon="inline-start" />
           {{ loading ? "Benchmarking" : "Benchmark" }}
         </Button>
-        <div class="flex items-center gap-2 rounded-lg border bg-background px-3 py-2">
+        <div class="flex h-9 items-center gap-2 rounded-md border bg-background px-3">
           <Clock3 class="size-4 text-muted-foreground" />
           <span class="text-sm text-muted-foreground">Interval</span>
           <Input
             type="number"
             min="1"
             max="1440"
-            class="h-7 w-20 border-none bg-transparent px-0 text-right shadow-none focus-visible:ring-0"
+            class="h-full w-20 border-0 bg-transparent px-0 text-right text-sm shadow-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
             :value="intervalMinutes"
             @input="emit('update-interval', $event.target.value)"
           />
@@ -47,7 +47,7 @@ function fallbackLabel(name) {
 
       <div class="flex items-center gap-2">
         <Badge variant="secondary">{{ availableTargets }}/5 reachable</Badge>
-        <Badge variant="outline">{{ averageLabel }}</Badge>
+        <Badge variant="secondary">{{ averageLabel }}</Badge>
       </div>
     </div>
 
