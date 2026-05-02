@@ -18,6 +18,34 @@ function normalizeIntervalMinutes(value) {
   return Math.min(Math.trunc(interval), 99)
 }
 
+function buildCustomTarget(rawURL) {
+  const value = String(rawURL || '').trim()
+  if (!value) return null
+
+  if (!/^https?:\/\//i.test(value)) {
+    return null
+  }
+
+  let parsed
+  try {
+    parsed = new URL(value)
+  } catch {
+    return null
+  }
+
+  const host = parsed.hostname.replace(/^www\./, '')
+  if (!host || !host.includes('.')) {
+    return null
+  }
+
+  return {
+    id: '',
+    name: host,
+    url: value,
+    iconUrl: `https://favicon.im/${host}`,
+  }
+}
+
 export const useSiteCheckStore = defineStore('sitecheck', () => {
   const settings = ref(defaultClientSettings())
   const report = shallowRef(null)
@@ -28,7 +56,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
   const toastMessage = shallowRef('')
   const toastTone = shallowRef('muted')
 
-  const canSave = computed(() => !saving.value && settings.value.targets.length === 5)
+  const canSave = computed(() => !saving.value && settings.value.targets.length >= 5)
 
   function setMessage(text, tone = 'muted') {
     message.value = text
@@ -70,6 +98,29 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
       showToast(`Go received ${settings.value.intervalMinutes}m interval`, 'success')
     } catch (error) {
       showToast(String(error), 'danger')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function addTargetUrl(rawURL) {
+    const nextTarget = buildCustomTarget(rawURL)
+    if (!nextTarget) {
+      showToast('Invalid site url', 'danger')
+      return false
+    }
+
+    saving.value = true
+    try {
+      settings.value = await SiteCheckService.SaveSettings({
+        ...settings.value,
+        targets: [...settings.value.targets, nextTarget],
+      })
+      showToast(`Go received ${nextTarget.name}`, 'success')
+      return true
+    } catch (error) {
+      showToast(String(error), 'danger')
+      return false
     } finally {
       saving.value = false
     }
@@ -130,6 +181,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     loadSettings,
     setIntervalMinutes,
     updateIntervalMinutes,
+    addTargetUrl,
     updateTarget,
     saveSettings,
     benchmark,

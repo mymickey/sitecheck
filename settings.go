@@ -6,13 +6,14 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
 
-const maxTargets = 5
+const minTargets = 5
 
-var errInvalidSettings = errors.New("settings must contain five named connectivity targets with valid urls")
+var errInvalidSettings = errors.New("settings must contain at least five connectivity targets with valid urls")
 
 func DefaultSettings() Settings {
 	return Settings{
@@ -146,26 +147,34 @@ func normalizeSettings(settings Settings) (Settings, error) {
 	if settings.IntervalMinutes <= 0 {
 		settings.IntervalMinutes = 10
 	}
-	if len(settings.Targets) != maxTargets {
+	if len(settings.Targets) < minTargets {
 		return Settings{}, errInvalidSettings
 	}
 
-	targets := make([]Target, 0, maxTargets)
+	targets := make([]Target, 0, len(settings.Targets))
+	seenIDs := make(map[string]int, len(settings.Targets))
 	for index, target := range settings.Targets {
-		name := strings.TrimSpace(target.Name)
 		normalizedURL, ok := NormalizeTargetURL(target.URL)
-		if name == "" || !ok {
+		if !ok {
 			return Settings{}, errInvalidSettings
 		}
 
 		parsed, _ := url.Parse(normalizedURL)
 		host := strings.TrimPrefix(parsed.Hostname(), "www.")
+		name := strings.TrimSpace(target.Name)
+		if name == "" {
+			name = host
+		}
+		if name == "" {
+			return Settings{}, errInvalidSettings
+		}
 		id := strings.TrimSpace(target.ID)
 		if id == "" {
-			id = strings.ToLower(strings.ReplaceAll(name, " ", "-"))
+			id = normalizedTargetID(name)
 		}
+		id = uniqueTargetID(id, seenIDs)
 		if id == "" {
-			id = "target-" + string(rune('1'+index))
+			id = uniqueTargetID("target-"+strconv.Itoa(index+1), seenIDs)
 		}
 
 		iconURL := strings.TrimSpace(target.IconURL)
@@ -183,4 +192,37 @@ func normalizeSettings(settings Settings) (Settings, error) {
 
 	settings.Targets = targets
 	return settings, nil
+}
+
+func normalizedTargetID(name string) string {
+	name = strings.ToLower(strings.TrimSpace(name))
+	name = strings.ReplaceAll(name, " ", "-")
+	var out strings.Builder
+	lastDash := false
+	for _, char := range name {
+		switch {
+		case char >= 'a' && char <= 'z', char >= '0' && char <= '9':
+			out.WriteRune(char)
+			lastDash = false
+		case char == '.' || char == '-' || char == '_':
+			if !lastDash && out.Len() > 0 {
+				out.WriteByte('-')
+				lastDash = true
+			}
+		}
+	}
+	return strings.Trim(out.String(), "-")
+}
+
+func uniqueTargetID(base string, seen map[string]int) string {
+	base = strings.TrimSpace(base)
+	if base == "" {
+		base = "target"
+	}
+	count := seen[base]
+	seen[base] = count + 1
+	if count == 0 {
+		return base
+	}
+	return base + "-" + strconv.Itoa(count+1)
 }

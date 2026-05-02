@@ -1,9 +1,15 @@
 <script setup>
-import { ref, watch } from "vue";
-import { CirclePlay, Clock3 } from "lucide-vue-next";
+import { computed, ref, watch } from "vue";
+import { CirclePlay, Clock3, Plus } from "lucide-vue-next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  DialogTitle,
+} from "reka-ui";
+import { Modal } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
 
 const props = defineProps({
@@ -12,6 +18,8 @@ const props = defineProps({
   availableTargets: { type: Number, required: true },
   averageLabel: { type: String, required: true },
   loading: { type: Boolean, required: true },
+  saving: { type: Boolean, required: true },
+  addTargetUrl: { type: Function, required: true },
 });
 
 const emit = defineEmits(["benchmark", "update-interval"]);
@@ -21,6 +29,9 @@ function fallbackLabel(name) {
 }
 
 const intervalDraft = ref("10");
+const modalOpen = ref(false);
+const siteURL = ref("");
+const siteURLTouched = ref(false);
 
 watch(
   () => props.intervalMinutes,
@@ -40,6 +51,41 @@ function handleIntervalInput(event) {
 
   intervalDraft.value = String(normalized);
   emit("update-interval", normalized);
+}
+
+const isValidSiteURL = computed(() => {
+  const value = siteURL.value.trim();
+  if (!/^https?:\/\//i.test(value)) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return Boolean(parsed.hostname && parsed.hostname.includes("."));
+  } catch {
+    return false;
+  }
+});
+
+const siteURLError = computed(() => {
+  if (!siteURLTouched.value || !siteURL.value.trim()) return "";
+  if (!/^https?:\/\//i.test(siteURL.value.trim())) {
+    return "URL must start with http:// or https://";
+  }
+  if (!isValidSiteURL.value) {
+    return "Enter a valid site URL";
+  }
+  return "";
+});
+
+async function handleAddTarget() {
+  siteURLTouched.value = true;
+  if (!isValidSiteURL.value) return;
+  const saved = await props.addTargetUrl(siteURL.value);
+  if (!saved) return;
+  siteURL.value = "";
+  siteURLTouched.value = false;
+  modalOpen.value = false;
 }
 </script>
 
@@ -69,11 +115,20 @@ function handleIntervalInput(event) {
           />
           <span class="text-[12px] text-muted-foreground">m</span>
         </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          class="h-8 rounded-sm px-2 shadow-none active:translate-y-px cursor-pointer"
+          :disabled="saving"
+          @click="modalOpen = true"
+        >
+          <Plus class="size-3.5" />
+        </Button>
       </div>
 
       <div class="flex items-center gap-2">
         <Badge variant="secondary" class="h-6 rounded-sm px-2 text-[11px] font-medium">
-          {{ availableTargets }}/5 reachable
+          {{ availableTargets }}/{{ targetRows.length }} reachable
         </Badge>
         <Badge variant="secondary" class="h-6 rounded-sm px-2 text-[11px] font-medium">
           {{ averageLabel }}
@@ -107,6 +162,47 @@ function handleIntervalInput(event) {
         </Badge>
       </div>
     </div>
+
+    <Modal v-model:open="modalOpen" backdrop="blur" size="sm">
+      <div class="flex flex-col gap-1">
+        <DialogTitle class="text-[15px] font-semibold tracking-tight">Add Checkpoint</DialogTitle>
+        <p class="text-[12px] text-muted-foreground">Enter a website URL to monitor its connectivity.</p>
+      </div>
+
+      <div class="mt-2 flex flex-col gap-2">
+        <Label for="custom-site-url" class="text-[12px] font-medium">Site URL</Label>
+        <Input
+          id="custom-site-url"
+          v-model="siteURL"
+          placeholder="https://github.com"
+          class="h-9 rounded-sm text-[13px] shadow-none"
+          @input="siteURLTouched = true"
+          @keyup.enter="isValidSiteURL && handleAddTarget()"
+        />
+        <p v-if="siteURLError" class="text-[11px] text-destructive">
+          {{ siteURLError }}
+        </p>
+      </div>
+
+      <div class="mt-4 flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          class="h-8 rounded-sm px-3 text-[13px]"
+          @click="modalOpen = false"
+        >
+          Cancel
+        </Button>
+        <Button
+          size="sm"
+          class="h-8 rounded-sm px-3 text-[13px] shadow-none"
+          :disabled="saving || !isValidSiteURL"
+          @click="handleAddTarget"
+        >
+          {{ saving ? "Saving" : "Add Checkpoint" }}
+        </Button>
+      </div>
+    </Modal>
   </section>
 </template>
 

@@ -101,6 +101,8 @@ function hostLabel(target) {
       :available-targets="availableTargets"
       :average-label="averageLabel"
       :loading="store.loading"
+      :saving="store.saving"
+      :add-target-url="store.addTargetUrl"
       @benchmark="store.benchmark"
       @update-interval="store.updateIntervalMinutes"
     />

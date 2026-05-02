@@ -63,3 +63,31 @@ func TestNormalizeTargetURL(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeSettingsAllowsCustomTargetsBeyondDefaultFive(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Targets = append(settings.Targets, Target{
+		Name: "example.com",
+		URL:  "https://example.com/status",
+	})
+
+	got, err := normalizeSettings(settings)
+	if err != nil {
+		t.Fatalf("normalizeSettings() error = %v, want nil", err)
+	}
+
+	if len(got.Targets) != 6 {
+		t.Fatalf("len(normalizeSettings().Targets) = %d, want 6", len(got.Targets))
+	}
+
+	last := got.Targets[5]
+	if last.ID == "" || last.Name == "" || last.URL == "" || last.IconURL == "" {
+		t.Fatalf("custom target = %+v, want populated fields", last)
+	}
+	if last.Name != "example.com" {
+		t.Fatalf("custom target name = %q, want %q", last.Name, "example.com")
+	}
+	if last.IconURL != "https://favicon.im/example.com" {
+		t.Fatalf("custom target icon = %q, want %q", last.IconURL, "https://favicon.im/example.com")
+	}
+}
