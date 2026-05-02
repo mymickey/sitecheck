@@ -17,6 +17,7 @@ import { SiteCheckService } from "../../bindings/sitecheck";
 
 const store = useSiteCheckStore();
 const scrollContainer = ref(null);
+const trayPageClass = "tray-menu-open";
 
 const trayTargets = computed(() =>
   store.settings.targets.slice(0, 5).map((target) => {
@@ -36,13 +37,19 @@ const trayTargets = computed(() =>
 onMounted(() => {
   store.loadSettings();
   resetScrollTop();
+  document.documentElement.classList.add(trayPageClass);
+  document.body.classList.add(trayPageClass);
   document.addEventListener("visibilitychange", handleVisibilityChange);
   window.addEventListener("focus", resetScrollTop);
+  scrollContainer.value?.addEventListener("wheel", handleWheel, { passive: false });
 });
 
 onBeforeUnmount(() => {
+  scrollContainer.value?.removeEventListener("wheel", handleWheel);
   document.removeEventListener("visibilitychange", handleVisibilityChange);
   window.removeEventListener("focus", resetScrollTop);
+  document.documentElement.classList.remove(trayPageClass);
+  document.body.classList.remove(trayPageClass);
 });
 
 function handleShowSettings() {
@@ -68,6 +75,26 @@ function resetScrollTop() {
 function handleVisibilityChange() {
   if (!document.hidden) {
     resetScrollTop();
+  }
+}
+
+function handleWheel(event) {
+  const container = scrollContainer.value;
+  if (!container) {
+    return;
+  }
+
+  const maxScrollTop = container.scrollHeight - container.clientHeight;
+  if (maxScrollTop <= 0) {
+    event.preventDefault();
+    return;
+  }
+
+  const atTop = container.scrollTop <= 0;
+  const atBottom = container.scrollTop >= maxScrollTop - 1;
+
+  if ((atTop && event.deltaY < 0) || (atBottom && event.deltaY > 0)) {
+    event.preventDefault();
   }
 }
 </script>
@@ -146,9 +173,20 @@ function handleVisibilityChange() {
 .tray-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  overscroll-behavior: none;
 }
 
 .tray-scroll::-webkit-scrollbar {
   display: none;
+}
+
+:global(html.tray-menu-open),
+:global(body.tray-menu-open) {
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+:global(body.tray-menu-open #app) {
+  overflow: hidden;
 }
 </style>
