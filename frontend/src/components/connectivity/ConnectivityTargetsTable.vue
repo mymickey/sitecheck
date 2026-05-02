@@ -53,24 +53,55 @@ function handleIntervalInput(event) {
   emit("update-interval", normalized);
 }
 
-const isValidSiteURL = computed(() => {
-  const value = siteURL.value.trim();
-  if (!/^https?:\/\//i.test(value)) {
-    return false;
+function normalizeTargetURL(rawURL) {
+  const value = String(rawURL || "").trim();
+  if (!value || !/^https?:\/\//i.test(value)) {
+    return null;
   }
 
   try {
     const parsed = new URL(value);
-    return Boolean(parsed.hostname && parsed.hostname.includes("."));
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (!host || !host.includes(".")) {
+      return null;
+    }
+
+    const port = parsed.port ? `:${parsed.port}` : "";
+    parsed.protocol = parsed.protocol.toLowerCase();
+    parsed.hostname = host;
+    parsed.host = `${host}${port}`;
+
+    if (!parsed.pathname || parsed.pathname === "/") {
+      if (!parsed.search) {
+        parsed.pathname = "/favicon.ico";
+      } else {
+        parsed.pathname = "/";
+      }
+    }
+
+    return parsed.toString();
   } catch {
-    return false;
+    return null;
   }
+}
+
+const isValidSiteURL = computed(() => {
+  return Boolean(normalizeTargetURL(siteURL.value));
+});
+
+const isDuplicateSiteURL = computed(() => {
+  const normalized = normalizeTargetURL(siteURL.value);
+  if (!normalized) return false;
+  return props.targetRows.some((target) => normalizeTargetURL(target.url) === normalized);
 });
 
 const siteURLError = computed(() => {
   if (!siteURLTouched.value || !siteURL.value.trim()) return "";
   if (!/^https?:\/\//i.test(siteURL.value.trim())) {
     return "URL must start with http:// or https://";
+  }
+  if (isDuplicateSiteURL.value) {
+    return "This site URL already exists";
   }
   if (!isValidSiteURL.value) {
     return "Enter a valid site URL";
@@ -80,7 +111,7 @@ const siteURLError = computed(() => {
 
 async function handleAddTarget() {
   siteURLTouched.value = true;
-  if (!isValidSiteURL.value) return;
+  if (!isValidSiteURL.value || isDuplicateSiteURL.value) return;
   const saved = await props.addTargetUrl(siteURL.value);
   if (!saved) return;
   siteURL.value = "";
@@ -177,7 +208,7 @@ async function handleAddTarget() {
           placeholder="https://github.com"
           class="h-9 rounded-sm text-[13px] shadow-none"
           @input="siteURLTouched = true"
-          @keyup.enter="isValidSiteURL && handleAddTarget()"
+          @keyup.enter="isValidSiteURL && !isDuplicateSiteURL && handleAddTarget()"
         />
         <p v-if="siteURLError" class="text-[11px] text-destructive">
           {{ siteURLError }}
@@ -196,7 +227,7 @@ async function handleAddTarget() {
         <Button
           size="sm"
           class="h-8 rounded-sm px-3 text-[13px] shadow-none"
-          :disabled="saving || !isValidSiteURL"
+          :disabled="saving || !isValidSiteURL || isDuplicateSiteURL"
           @click="handleAddTarget"
         >
           {{ saving ? "Saving" : "Add Checkpoint" }}

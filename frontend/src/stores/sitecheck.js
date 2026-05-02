@@ -18,7 +18,7 @@ function normalizeIntervalMinutes(value) {
   return Math.min(Math.trunc(interval), 99)
 }
 
-function buildCustomTarget(rawURL) {
+function normalizeTargetURL(rawURL) {
   const value = String(rawURL || '').trim()
   if (!value) return null
 
@@ -26,24 +26,32 @@ function buildCustomTarget(rawURL) {
     return null
   }
 
-  let parsed
   try {
-    parsed = new URL(value)
+    const parsed = new URL(value)
+    const host = parsed.hostname.replace(/^www\./, '')
+    if (!host || !host.includes('.')) {
+      return null
+    }
+    return value
   } catch {
     return null
   }
+}
 
+function buildCustomTarget(rawURL) {
+  const normalizedURL = normalizeTargetURL(rawURL)
+  if (!normalizedURL) return null
+
+  const parsed = new URL(normalizedURL)
   const host = parsed.hostname.replace(/^www\./, '')
-  if (!host || !host.includes('.')) {
-    return null
-  }
 
-  return {
-    id: '',
-    name: host,
-    url: value,
-    iconUrl: `https://favicon.im/${host}`,
-  }
+  return { id: '', name: host, url: normalizedURL, iconUrl: `https://favicon.im/${host}` }
+}
+
+function hasDuplicateTargetURL(targets, rawURL) {
+  const trimmedURL = String(rawURL || '').trim()
+  if (!trimmedURL) return false
+  return targets.some((target) => String(target.url || '').trim() === trimmedURL)
 }
 
 export const useSiteCheckStore = defineStore('sitecheck', () => {
@@ -107,6 +115,10 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     const nextTarget = buildCustomTarget(rawURL)
     if (!nextTarget) {
       showToast('Invalid site url', 'danger')
+      return false
+    }
+    if (hasDuplicateTargetURL(settings.value.targets, rawURL)) {
+      showToast('Site url already exists', 'danger')
       return false
     }
 

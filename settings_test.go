@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestDefaultSettingsUsesTenMinuteIntervalAndFiveTargets(t *testing.T) {
 	settings := DefaultSettings()
@@ -89,5 +92,36 @@ func TestNormalizeSettingsAllowsCustomTargetsBeyondDefaultFive(t *testing.T) {
 	}
 	if last.IconURL != "https://favicon.im/example.com" {
 		t.Fatalf("custom target icon = %q, want %q", last.IconURL, "https://favicon.im/example.com")
+	}
+}
+
+func TestNormalizeSettingsRejectsDuplicateTargetURLs(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Targets = append(settings.Targets, Target{
+		Name: "GitHub Duplicate",
+		URL:  "https://github.com/favicon.ico",
+	})
+
+	_, err := normalizeSettings(settings)
+	if !errors.Is(err, errDuplicateTargetURL) {
+		t.Fatalf("normalizeSettings() error = %v, want %v", err, errDuplicateTargetURL)
+	}
+}
+
+func TestNormalizeSettingsAllowsTrimDistinctURLs(t *testing.T) {
+	settings := DefaultSettings()
+	settings.Targets = append(settings.Targets, Target{
+		Name: "GitHub Root",
+		URL:  "https://github.com",
+	})
+
+	got, err := normalizeSettings(settings)
+	if err != nil {
+		t.Fatalf("normalizeSettings() error = %v, want nil", err)
+	}
+
+	last := got.Targets[len(got.Targets)-1]
+	if last.URL != "https://github.com" {
+		t.Fatalf("custom target url = %q, want %q", last.URL, "https://github.com")
 	}
 }

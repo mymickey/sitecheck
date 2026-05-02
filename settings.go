@@ -14,6 +14,7 @@ import (
 const minTargets = 5
 
 var errInvalidSettings = errors.New("settings must contain at least five connectivity targets with valid urls")
+var errDuplicateTargetURL = errors.New("settings must not contain duplicate connectivity target urls")
 
 func DefaultSettings() Settings {
 	return Settings{
@@ -67,9 +68,11 @@ func NormalizeTargetURL(input string) (string, bool) {
 		return "", false
 	}
 
+	addedScheme := false
 	if !strings.HasPrefix(strings.ToLower(raw), "http://") &&
 		!strings.HasPrefix(strings.ToLower(raw), "https://") {
 		raw = "https://" + raw
+		addedScheme = true
 	}
 
 	parsed, err := url.Parse(raw)
@@ -77,14 +80,15 @@ func NormalizeTargetURL(input string) (string, bool) {
 		return "", false
 	}
 
-	if parsed.Path == "" || parsed.Path == "/" {
+	if addedScheme && (parsed.Path == "" || parsed.Path == "/") {
 		if parsed.RawQuery == "" {
 			return parsed.Scheme + "://" + parsed.Host + "/favicon.ico", true
 		}
 		parsed.Path = "/"
+		return parsed.String(), true
 	}
 
-	return parsed.String(), true
+	return strings.TrimSpace(input), true
 }
 
 type SettingsStore struct {
@@ -153,8 +157,15 @@ func normalizeSettings(settings Settings) (Settings, error) {
 
 	targets := make([]Target, 0, len(settings.Targets))
 	seenIDs := make(map[string]int, len(settings.Targets))
+	seenURLs := make(map[string]struct{}, len(settings.Targets))
 	for index, target := range settings.Targets {
-		normalizedURL, ok := NormalizeTargetURL(target.URL)
+		rawURL := strings.TrimSpace(target.URL)
+		if _, exists := seenURLs[rawURL]; exists {
+			return Settings{}, errDuplicateTargetURL
+		}
+		seenURLs[rawURL] = struct{}{}
+
+		normalizedURL, ok := NormalizeTargetURL(rawURL)
 		if !ok {
 			return Settings{}, errInvalidSettings
 		}
