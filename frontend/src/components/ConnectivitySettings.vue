@@ -103,6 +103,7 @@ function hostLabel(target) {
       :loading="store.loading"
       :saving="store.saving"
       :add-target-url="store.addTargetUrl"
+      :remove-target="store.removeTarget"
       @benchmark="store.benchmark"
       @update-interval="store.updateIntervalMinutes"
     />

@@ -19,7 +19,7 @@ const store = useSiteCheckStore();
 const scrollContainer = ref(null);
 
 const trayTargets = computed(() =>
-  store.settings.targets.map((target) => {
+  store.settings.targets.slice(0, 5).map((target) => {
     const result = store.report?.results?.find((entry) => entry.id === target.id);
 
     return {

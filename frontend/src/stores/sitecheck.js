@@ -126,9 +126,31 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     try {
       settings.value = await SiteCheckService.SaveSettings({
         ...settings.value,
-        targets: [...settings.value.targets, nextTarget],
+        targets: [nextTarget, ...settings.value.targets],
       })
       showToast(`Go received ${nextTarget.name}`, 'success')
+      return true
+    } catch (error) {
+      showToast(String(error), 'danger')
+      return false
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function removeTarget(targetID) {
+    const nextTargets = settings.value.targets.filter((target) => target.id !== targetID)
+    if (nextTargets.length === settings.value.targets.length) {
+      return false
+    }
+
+    saving.value = true
+    try {
+      settings.value = await SiteCheckService.SaveSettings({
+        ...settings.value,
+        targets: nextTargets,
+      })
+      showToast('Checkpoint removed', 'success')
       return true
     } catch (error) {
       showToast(String(error), 'danger')
@@ -194,6 +216,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     setIntervalMinutes,
     updateIntervalMinutes,
     addTargetUrl,
+    removeTarget,
     updateTarget,
     saveSettings,
     benchmark,

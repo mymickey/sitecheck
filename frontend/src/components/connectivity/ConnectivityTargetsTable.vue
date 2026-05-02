@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { CirclePlay, Clock3, Plus } from "lucide-vue-next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ const props = defineProps({
   loading: { type: Boolean, required: true },
   saving: { type: Boolean, required: true },
   addTargetUrl: { type: Function, required: true },
+  removeTarget: { type: Function, required: false, default: null },
 });
 
 const emit = defineEmits(["benchmark", "update-interval"]);
@@ -32,6 +33,8 @@ const intervalDraft = ref("10");
 const modalOpen = ref(false);
 const siteURL = ref("");
 const siteURLTouched = ref(false);
+const activeDeleteTargetID = ref("");
+const rootElement = ref(null);
 
 watch(
   () => props.intervalMinutes,
@@ -118,10 +121,45 @@ async function handleAddTarget() {
   siteURLTouched.value = false;
   modalOpen.value = false;
 }
+
+const canDeleteTargets = computed(() => props.targetRows.length > 5);
+
+function enterDeleteMode(targetID) {
+  if (!canDeleteTargets.value) return;
+  activeDeleteTargetID.value = activeDeleteTargetID.value === targetID ? "" : targetID;
+}
+
+async function handleRemoveTarget(targetID) {
+  if (typeof props.removeTarget !== "function") {
+    return;
+  }
+  const removed = await props.removeTarget(targetID);
+  if (removed) {
+    activeDeleteTargetID.value = "";
+  }
+}
+
+function clearDeleteMode() {
+  activeDeleteTargetID.value = "";
+}
+
+function handleGlobalPointerDown(event) {
+  if (!activeDeleteTargetID.value) return;
+  if (rootElement.value?.contains(event.target)) return;
+  clearDeleteMode();
+}
+
+onMounted(() => {
+  document.documentElement.addEventListener("pointerdown", handleGlobalPointerDown);
+});
+
+onBeforeUnmount(() => {
+  document.documentElement.removeEventListener("pointerdown", handleGlobalPointerDown);
+});
 </script>
 
 <template>
-  <section class="flex flex-col gap-4">
+  <section ref="rootElement" class="flex flex-col gap-4" @click="clearDeleteMode">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
       <div class="flex items-center gap-2">
         <Button
@@ -173,10 +211,37 @@ async function handleAddTarget() {
         :key="target.id"
         class="flex items-center gap-3 border-b px-3 py-2.5 last:border-b-0"
       >
-        <Avatar class="size-5 rounded-sm" shape="square">
-          <AvatarImage :src="target.iconUrl" :alt="target.name" />
-          <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
-        </Avatar>
+        <button
+          type="button"
+          class="flex size-5 items-center justify-center cursor-pointer"
+          :class="{ 'cursor-default': !canDeleteTargets }"
+          @click.stop="enterDeleteMode(target.id)"
+        >
+          <Avatar
+            v-if="activeDeleteTargetID !== target.id"
+            class="size-5 rounded-sm"
+            shape="square"
+          >
+            <AvatarImage :src="target.iconUrl" :alt="target.name" />
+            <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
+          </Avatar>
+          <svg
+            v-else
+            viewBox="0 0 1024 1024"
+            xmlns="http://www.w3.org/2000/svg"
+            class="size-5"
+            @click.stop="handleRemoveTarget(target.id)"
+          >
+            <path
+              d="M874.482336 149.501664c-199.356885-199.356885-525.623787-199.356885-724.980672 0s-199.356885 525.623787 0 724.980672 525.623787 199.356885 724.980672 0 199.356885-525.623787 0-724.980672z"
+              fill="#FA453B"
+            />
+            <path
+              d="M666.677583 739.18845L511.992 584.502867 357.306417 739.18845 284.79555 666.677583 439.481133 511.992 284.79555 357.306417 357.306417 284.79555 511.992 439.481133l154.685583-154.685583 72.510867 72.510867L584.502867 511.992l154.685583 154.685583z"
+              fill="#FFFFFF"
+            />
+          </svg>
+        </button>
 
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <div class="w-36 truncate text-[13px] font-medium text-foreground">
