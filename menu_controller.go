@@ -20,8 +20,8 @@ type MenuController struct {
 	logo           []byte
 	settings       Settings
 	report         BenchmarkReport
+	dnsReport      DNSTestReport
 	icons          map[string][]byte
-	isBenchmarking bool
 	menuWindow     *application.WebviewWindow
 	settingsWidth  int
 	settingsHeight int
@@ -65,6 +65,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 	controller.menuWindow.OnWindowEvent(events.Mac.WindowDidBecomeKey, func(event *application.WindowEvent) {
 		controller.service.telemetry.Track("tray_opened", nil)
 		go controller.RunBenchmark()
+		go controller.RunDNSBenchmark()
 	})
 
 	controller.menuWindow.OnWindowEvent(events.Mac.WindowDidResignKey, func(event *application.WindowEvent) {
@@ -98,6 +99,12 @@ func (c *MenuController) UpdateReport(report BenchmarkReport) {
 		slow = fmt.Sprintf("%dms", report.Summary.SlowestMS)
 	}
 	c.tray.SetLabel(fmt.Sprintf("%s | %s", fast, slow))
+}
+
+func (c *MenuController) UpdateDNSReport(report DNSTestReport) {
+	c.mu.Lock()
+	c.dnsReport = report
+	c.mu.Unlock()
 }
 
 func (c *MenuController) ShowSettings() {
@@ -142,19 +149,11 @@ func (c *MenuController) ShowSettings() {
 }
 
 func (c *MenuController) RunBenchmark() {
-	c.mu.Lock()
-	if c.isBenchmarking {
-		c.mu.Unlock()
-		return
-	}
-	c.isBenchmarking = true
-	c.mu.Unlock()
+	_, _ = c.service.Benchmark(TriggerTray)
+}
 
-	_, _ = c.service.Benchmark()
-
-	c.mu.Lock()
-	c.isBenchmarking = false
-	c.mu.Unlock()
+func (c *MenuController) RunDNSBenchmark() {
+	_, _ = c.service.BenchmarkDNS(TriggerTray)
 }
 
 func (c *MenuController) rebuildMenu() {

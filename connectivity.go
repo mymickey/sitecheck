@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const probeTimeout = 3600 * time.Millisecond
+const probeTimeout = 30 * time.Second
 
 type ConnectivityMonitor struct {
 	client *http.Client

@@ -18,7 +18,8 @@ var errDuplicateTargetURL = errors.New("settings must not contain duplicate conn
 
 func DefaultSettings() Settings {
 	return Settings{
-		IntervalMinutes: 10,
+		IntervalMinutes:  10,
+		DNSIntervalHours: 1,
 		Targets: []Target{
 			{
 				ID:      "wechat",
@@ -150,6 +151,9 @@ func (s *SettingsStore) Save(settings Settings) (Settings, error) {
 func normalizeSettings(settings Settings) (Settings, error) {
 	if settings.IntervalMinutes <= 0 {
 		settings.IntervalMinutes = 10
+	}
+	if settings.DNSIntervalHours < 1 || settings.DNSIntervalHours > 99 {
+		settings.DNSIntervalHours = 1
 	}
 	if len(settings.Targets) < minTargets {
 		return Settings{}, errInvalidSettings

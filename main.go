@@ -17,6 +17,7 @@ var appIcon []byte
 
 func init() {
 	application.RegisterEvent[BenchmarkReport]("benchmark-finished")
+	application.RegisterEvent[DNSTestReport]("dns-benchmark-finished")
 	application.RegisterEvent[Settings]("settings-updated")
 }
 
@@ -48,17 +49,21 @@ func main() {
 
 	menuController := NewMenuController(app, siteCheck, appIcon, settings)
 	scheduler := NewBenchmarkScheduler(siteCheck)
-	scheduler.Start(settings.IntervalMinutes)
+	scheduler.Start(settings.IntervalMinutes, settings.DNSIntervalHours)
 	app.OnShutdown(scheduler.Stop)
 
 	siteCheck.onSettingsSaved = func(settings Settings) {
 		menuController.UpdateSettings(settings)
-		scheduler.Start(settings.IntervalMinutes)
+		scheduler.Start(settings.IntervalMinutes, settings.DNSIntervalHours)
 		app.Event.Emit("settings-updated", settings)
 	}
 	siteCheck.onBenchmarkFinish = func(report BenchmarkReport) {
 		menuController.UpdateReport(report)
 		app.Event.Emit("benchmark-finished", report)
+	}
+	siteCheck.onDNSFinish = func(report DNSTestReport) {
+		menuController.UpdateDNSReport(report)
+		app.Event.Emit("dns-benchmark-finished", report)
 	}
 	siteCheck.onShowSettings = func() {
 		menuController.ShowSettings()
@@ -70,7 +75,8 @@ func main() {
 	go func() {
 		telemetry.Track("app_started", nil)
 		time.Sleep(time.Second)
-		_, _ = siteCheck.Benchmark()
+		go siteCheck.Benchmark(TriggerScheduler)
+		go siteCheck.BenchmarkDNS(TriggerScheduler)
 	}()
 
 	if err := app.Run(); err != nil {

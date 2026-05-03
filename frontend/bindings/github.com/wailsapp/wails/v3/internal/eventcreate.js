@@ -13,12 +13,14 @@ import * as main$0 from "../../../../../sitecheck/models.js";
 function configure() {
     Object.freeze(Object.assign($Create.Events, {
         "benchmark-finished": $$createType0,
-        "settings-updated": $$createType1,
+        "dns-benchmark-finished": $$createType1,
+        "settings-updated": $$createType2,
     }));
 }
 
 // Private type creation functions
 const $$createType0 = main$0.BenchmarkReport.createFrom;
-const $$createType1 = main$0.Settings.createFrom;
+const $$createType1 = main$0.DNSTestReport.createFrom;
+const $$createType2 = main$0.Settings.createFrom;
 
 configure();

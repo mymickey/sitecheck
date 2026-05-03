@@ -10,6 +10,9 @@ export {
 export {
     BenchmarkReport,
     BenchmarkSummary,
+    DNSCheckpoint,
+    DNSResult,
+    DNSTestReport,
     ProbeResult,
     Settings,
     Target

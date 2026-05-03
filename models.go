@@ -14,8 +14,9 @@ type Target struct {
 }
 
 type Settings struct {
-	IntervalMinutes int      `json:"intervalMinutes"`
-	Targets         []Target `json:"targets"`
+	IntervalMinutes  int      `json:"intervalMinutes"`
+	DNSIntervalHours int      `json:"dnsIntervalHours"`
+	Targets          []Target `json:"targets"`
 }
 
 type ProbeResult struct {
@@ -39,4 +40,20 @@ type BenchmarkSummary struct {
 type BenchmarkReport struct {
 	Results []ProbeResult    `json:"results"`
 	Summary BenchmarkSummary `json:"summary"`
+}
+
+type DNSResult struct {
+	ISP     string `json:"isp"`
+	IP      string `json:"ip"`
+	Country string `json:"country"`
+}
+
+type DNSCheckpoint struct {
+	Name   string    `json:"name"`
+	Result DNSResult `json:"result"`
+}
+
+type DNSTestReport struct {
+	Checkpoints []DNSCheckpoint `json:"checkpoints"`
+	CheckedAt   string          `json:"checkedAt"`
 }

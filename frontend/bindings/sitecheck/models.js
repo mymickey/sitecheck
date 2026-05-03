@@ -98,6 +98,126 @@ export class BenchmarkSummary {
     }
 }
 
+export class DNSCheckpoint {
+    /**
+     * Creates a new DNSCheckpoint instance.
+     * @param {Partial<DNSCheckpoint>} [$$source = {}] - The source object to create the DNSCheckpoint.
+     */
+    constructor($$source = {}) {
+        if (!("name" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["name"] = "";
+        }
+        if (!("result" in $$source)) {
+            /**
+             * @member
+             * @type {DNSResult}
+             */
+            this["result"] = (new DNSResult());
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DNSCheckpoint instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {DNSCheckpoint}
+     */
+    static createFrom($$source = {}) {
+        const $$createField1_0 = $$createType3;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("result" in $$parsedSource) {
+            $$parsedSource["result"] = $$createField1_0($$parsedSource["result"]);
+        }
+        return new DNSCheckpoint(/** @type {Partial<DNSCheckpoint>} */($$parsedSource));
+    }
+}
+
+export class DNSResult {
+    /**
+     * Creates a new DNSResult instance.
+     * @param {Partial<DNSResult>} [$$source = {}] - The source object to create the DNSResult.
+     */
+    constructor($$source = {}) {
+        if (!("isp" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["isp"] = "";
+        }
+        if (!("ip" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["ip"] = "";
+        }
+        if (!("country" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["country"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DNSResult instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {DNSResult}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new DNSResult(/** @type {Partial<DNSResult>} */($$parsedSource));
+    }
+}
+
+export class DNSTestReport {
+    /**
+     * Creates a new DNSTestReport instance.
+     * @param {Partial<DNSTestReport>} [$$source = {}] - The source object to create the DNSTestReport.
+     */
+    constructor($$source = {}) {
+        if (!("checkpoints" in $$source)) {
+            /**
+             * @member
+             * @type {DNSCheckpoint[]}
+             */
+            this["checkpoints"] = [];
+        }
+        if (!("checkedAt" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["checkedAt"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DNSTestReport instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {DNSTestReport}
+     */
+    static createFrom($$source = {}) {
+        const $$createField0_0 = $$createType5;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("checkpoints" in $$parsedSource) {
+            $$parsedSource["checkpoints"] = $$createField0_0($$parsedSource["checkpoints"]);
+        }
+        return new DNSTestReport(/** @type {Partial<DNSTestReport>} */($$parsedSource));
+    }
+}
+
 export class ProbeResult {
     /**
      * Creates a new ProbeResult instance.
@@ -188,6 +308,13 @@ export class Settings {
              */
             this["intervalMinutes"] = 0;
         }
+        if (!("dnsIntervalHours" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["dnsIntervalHours"] = 0;
+        }
         if (!("targets" in $$source)) {
             /**
              * @member
@@ -205,10 +332,10 @@ export class Settings {
      * @returns {Settings}
      */
     static createFrom($$source = {}) {
-        const $$createField1_0 = $$createType4;
+        const $$createField2_0 = $$createType7;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("targets" in $$parsedSource) {
-            $$parsedSource["targets"] = $$createField1_0($$parsedSource["targets"]);
+            $$parsedSource["targets"] = $$createField2_0($$parsedSource["targets"]);
         }
         return new Settings(/** @type {Partial<Settings>} */($$parsedSource));
     }
@@ -267,5 +394,8 @@ export class Target {
 const $$createType0 = ProbeResult.createFrom;
 const $$createType1 = $Create.Array($$createType0);
 const $$createType2 = BenchmarkSummary.createFrom;
-const $$createType3 = Target.createFrom;
-const $$createType4 = $Create.Array($$createType3);
+const $$createType3 = DNSResult.createFrom;
+const $$createType4 = DNSCheckpoint.createFrom;
+const $$createType5 = $Create.Array($$createType4);
+const $$createType6 = Target.createFrom;
+const $$createType7 = $Create.Array($$createType6);

@@ -13,6 +13,7 @@ declare module "@wailsio/runtime" {
     namespace Events {
         interface CustomEvents {
             "benchmark-finished": main$0.BenchmarkReport;
+            "dns-benchmark-finished": main$0.DNSTestReport;
             "settings-updated": main$0.Settings;
         }
     }

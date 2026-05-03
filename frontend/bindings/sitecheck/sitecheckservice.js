@@ -11,11 +11,22 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as $models from "./models.js";
 
 /**
+ * @param {string} source
  * @returns {$CancellablePromise<$models.BenchmarkReport>}
  */
-export function Benchmark() {
-    return $Call.ByID(3945575655).then(/** @type {($result: any) => any} */(($result) => {
+export function Benchmark(source) {
+    return $Call.ByID(3945575655, source).then(/** @type {($result: any) => any} */(($result) => {
         return $$createType0($result);
+    }));
+}
+
+/**
+ * @param {string} source
+ * @returns {$CancellablePromise<$models.DNSTestReport>}
+ */
+export function BenchmarkDNS(source) {
+    return $Call.ByID(3530690002, source).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType1($result);
     }));
 }
 
@@ -24,7 +35,7 @@ export function Benchmark() {
  */
 export function GetSettings() {
     return $Call.ByID(4061041145).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType1($result);
+        return $$createType2($result);
     }));
 }
 
@@ -41,7 +52,7 @@ export function Quit() {
  */
 export function SaveSettings(settings) {
     return $Call.ByID(1922714600, settings).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType1($result);
+        return $$createType2($result);
     }));
 }
 
@@ -54,4 +65,5 @@ export function ShowSettings() {
 
 // Private type creation functions
 const $$createType0 = $models.BenchmarkReport.createFrom;
-const $$createType1 = $models.Settings.createFrom;
+const $$createType1 = $models.DNSTestReport.createFrom;
+const $$createType2 = $models.Settings.createFrom;

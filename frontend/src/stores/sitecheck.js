@@ -57,7 +57,9 @@ function hasDuplicateTargetURL(targets, rawURL) {
 export const useSiteCheckStore = defineStore('sitecheck', () => {
   const settings = ref(defaultClientSettings())
   const report = shallowRef(null)
+  const dnsReport = shallowRef(null)
   const loading = shallowRef(false)
+  const dnsLoading = shallowRef(false)
   const saving = shallowRef(false)
   const message = shallowRef('')
   const messageTone = shallowRef('muted')
@@ -182,10 +184,25 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     }
   }
 
+  async function benchmarkDNS() {
+    if (dnsLoading.value) return
+    
+    dnsLoading.value = true
+    try {
+      dnsReport.value = await SiteCheckService.BenchmarkDNS("manual")
+    } catch (e) {
+      if (e !== "benchmark in progress" && e !== "context canceled") {
+        console.error("DNS Benchmark failed:", e)
+      }
+    } finally {
+      dnsLoading.value = false
+    }
+  }
+
   async function benchmark() {
     loading.value = true
     try {
-      report.value = await SiteCheckService.Benchmark()
+      report.value = await SiteCheckService.Benchmark("manual")
     } catch (error) {
       setMessage(String(error), 'danger')
     } finally {
@@ -196,6 +213,11 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
   Events.On('benchmark-finished', (event) => {
     report.value = event.data
     loading.value = false
+  })
+
+  Events.On('dns-benchmark-finished', (event) => {
+    dnsReport.value = event.data
+    dnsLoading.value = false
   })
 
   Events.On('settings-updated', (event) => {
@@ -220,5 +242,8 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     updateTarget,
     saveSettings,
     benchmark,
+    benchmarkDNS,
+    dnsReport,
+    dnsLoading,
   }
 })

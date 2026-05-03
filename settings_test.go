@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strconv"
 	"testing"
 )
 
@@ -10,6 +11,9 @@ func TestDefaultSettingsUsesTenMinuteIntervalAndFiveTargets(t *testing.T) {
 
 	if settings.IntervalMinutes != 10 {
 		t.Errorf("DefaultSettings().IntervalMinutes = %d, want 10", settings.IntervalMinutes)
+	}
+	if settings.DNSIntervalHours != 1 {
+		t.Errorf("DefaultSettings().DNSIntervalHours = %d, want 1", settings.DNSIntervalHours)
 	}
 	if len(settings.Targets) != 5 {
 		t.Fatalf("len(DefaultSettings().Targets) = %d, want 5", len(settings.Targets))
@@ -123,5 +127,34 @@ func TestNormalizeSettingsAllowsTrimDistinctURLs(t *testing.T) {
 	last := got.Targets[len(got.Targets)-1]
 	if last.URL != "https://github.com" {
 		t.Fatalf("custom target url = %q, want %q", last.URL, "https://github.com")
+	}
+}
+
+func TestNormalizeSettings_DNSIntervalHours(t *testing.T) {
+	tests := []struct {
+		input int
+		want  int
+	}{
+		{input: 0, want: 1},
+		{input: -5, want: 1},
+		{input: 100, want: 1},
+		{input: 50, want: 50},
+		{input: 99, want: 99},
+		{input: 1, want: 1},
+	}
+
+	for _, tt := range tests {
+		t.Run("input_"+strconv.Itoa(tt.input), func(t *testing.T) {
+			settings := DefaultSettings()
+			settings.DNSIntervalHours = tt.input
+			
+			got, err := normalizeSettings(settings)
+			if err != nil {
+				t.Fatalf("normalizeSettings() error = %v, want nil", err)
+			}
+			if got.DNSIntervalHours != tt.want {
+				t.Errorf("DNSIntervalHours = %d, want %d", got.DNSIntervalHours, tt.want)
+			}
+		})
 	}
 }
