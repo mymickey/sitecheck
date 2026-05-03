@@ -18,19 +18,23 @@ type SiteCheckService struct {
 	store             *SettingsStore
 	monitor           *ConnectivityMonitor
 	telemetry         *TelemetryClient
-	onSettingsSaved     func(Settings)
-	onBenchmarkFinish   func(BenchmarkReport)
-	onDNSFinish         func(DNSTestReport)
-	onShowSettings      func()
-	onQuit              func()
-	dnsManualCtx        context.Context
-	dnsManualCancel     context.CancelFunc
-	dnsRunningSource    string
-	dnsMu               sync.Mutex
-	connManualCtx       context.Context
-	connManualCancel    context.CancelFunc
-	connRunningSource   string
-	connMu              sync.Mutex
+	onSettingsSaved   func(Settings)
+	onBenchmarkFinish func(BenchmarkReport)
+	onDNSFinish       func(DNSTestReport)
+	onMyIPFinish      func(MyIPReport)
+	onShowSettings    func()
+	onQuit            func()
+	dnsManualCtx      context.Context
+	dnsManualCancel   context.CancelFunc
+	dnsRunningSource  string
+	dnsMu             sync.Mutex
+	connManualCtx     context.Context
+	connManualCancel  context.CancelFunc
+	connRunningSource string
+	connMu            sync.Mutex
+	myIPCtx           context.Context
+	myIPCancel        context.CancelFunc
+	myIPMu            sync.Mutex
 }
 
 func triggerPriority(source string) int {
@@ -115,7 +119,7 @@ func (s *SiteCheckService) Benchmark(source string) (BenchmarkReport, error) {
 		"source":        source,
 	})
 	report := s.monitor.Benchmark(ctx, settings.Targets)
-	
+
 	if ctx.Err() != nil {
 		return BenchmarkReport{}, ctx.Err()
 	}
@@ -170,6 +174,37 @@ func (s *SiteCheckService) BenchmarkDNS(source string) (DNSTestReport, error) {
 	return report, nil
 }
 
+func (s *SiteCheckService) RefreshMyIP() (MyIPReport, error) {
+	s.myIPMu.Lock()
+	if s.myIPCancel != nil {
+		s.myIPCancel()
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	s.myIPCtx = ctx
+	s.myIPCancel = cancel
+	s.myIPMu.Unlock()
+
+	defer func() {
+		s.myIPMu.Lock()
+		if s.myIPCtx == ctx {
+			s.myIPCancel = nil
+			s.myIPCtx = nil
+		}
+		s.myIPMu.Unlock()
+	}()
+
+	report, err := FetchMyIPUntilSuccess(ctx)
+	if err != nil {
+		return MyIPReport{}, err
+	}
+	if ctx.Err() != nil {
+		return MyIPReport{}, ctx.Err()
+	}
+	if s.onMyIPFinish != nil {
+		s.onMyIPFinish(report)
+	}
+	return report, nil
+}
 
 func (s *SiteCheckService) ShowSettings() {
 	s.telemetry.Track("settings_opened", nil)

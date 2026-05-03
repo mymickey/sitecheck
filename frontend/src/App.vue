@@ -2,6 +2,7 @@
 import { computed, onMounted, shallowRef } from "vue";
 import AboutPanel from "@/components/AboutPanel.vue";
 import ConnectivitySettings from "@/components/ConnectivitySettings.vue";
+import DNSTestSettings from "@/components/DNSTestSettings.vue";
 import TrayMenu from "@/components/TrayMenu.vue";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,19 @@ const store = useSiteCheckStore();
 
 const tabs = [
   { id: "connectivity", label: "Connectivity" },
-  { id: "about", label: "Help & Information" },
+  { id: "dns", label: "DNS Test" },
+  { id: "about", label: "About" },
 ];
 
-const activeComponent = computed(() =>
-  activeTab.value === "about" ? AboutPanel : ConnectivitySettings,
-);
+const activeComponent = computed(() => {
+  if (activeTab.value === "dns") {
+    return DNSTestSettings;
+  }
+  if (activeTab.value === "about") {
+    return AboutPanel;
+  }
+  return ConnectivitySettings;
+});
 
 const toastClass = computed(() => {
   if (store.toastTone === "danger") {

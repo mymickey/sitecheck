@@ -47,6 +47,15 @@ export function Quit() {
 }
 
 /**
+ * @returns {$CancellablePromise<$models.MyIPReport>}
+ */
+export function RefreshMyIP() {
+    return $Call.ByID(1209743392).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType3($result);
+    }));
+}
+
+/**
  * @param {$models.Settings} settings
  * @returns {$CancellablePromise<$models.Settings>}
  */
@@ -67,3 +76,4 @@ export function ShowSettings() {
 const $$createType0 = $models.BenchmarkReport.createFrom;
 const $$createType1 = $models.DNSTestReport.createFrom;
 const $$createType2 = $models.Settings.createFrom;
+const $$createType3 = $models.MyIPReport.createFrom;

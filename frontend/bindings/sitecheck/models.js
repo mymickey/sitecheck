@@ -218,6 +218,48 @@ export class DNSTestReport {
     }
 }
 
+export class MyIPReport {
+    /**
+     * Creates a new MyIPReport instance.
+     * @param {Partial<MyIPReport>} [$$source = {}] - The source object to create the MyIPReport.
+     */
+    constructor($$source = {}) {
+        if (!("ip" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["ip"] = "";
+        }
+        if (!("countryCode" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["countryCode"] = "";
+        }
+        if (!("checkedAt" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["checkedAt"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new MyIPReport instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {MyIPReport}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new MyIPReport(/** @type {Partial<MyIPReport>} */($$parsedSource));
+    }
+}
+
 export class ProbeResult {
     /**
      * Creates a new ProbeResult instance.

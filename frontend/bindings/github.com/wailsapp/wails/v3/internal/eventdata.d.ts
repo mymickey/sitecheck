@@ -14,6 +14,7 @@ declare module "@wailsio/runtime" {
         interface CustomEvents {
             "benchmark-finished": main$0.BenchmarkReport;
             "dns-benchmark-finished": main$0.DNSTestReport;
+            "myip-finished": main$0.MyIPReport;
             "settings-updated": main$0.Settings;
         }
     }

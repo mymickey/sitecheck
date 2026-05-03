@@ -12,6 +12,7 @@ import {
   TableCell,
   TableRow,
 } from "@/components/ui/table";
+import { countryFlagURL } from "@/lib/country-flags";
 import { useSiteCheckStore } from "@/stores/sitecheck";
 import { SiteCheckService } from "../../bindings/sitecheck";
 
@@ -27,27 +28,50 @@ const trayTargets = computed(() =>
       ...target,
       latency: store.loading
         ? "Testing..."
-        : result?.latencyMs
+        : result?.status === "Available"
           ? `${result.latencyMs}ms`
+          : result?.status === "Unavailable"
+            ? "Unavailable"
           : "--",
     };
   }),
 );
 
+const myIPDisplay = computed(() => ({
+  ip: store.myIPReport?.ip || "-",
+  countryCode: normalizeCountryCode(store.myIPReport?.countryCode),
+}));
+
+const dnsCheckpoints = computed(() => {
+  const checkpoints = store.dnsReport?.checkpoints;
+  if (checkpoints?.length) {
+    return checkpoints;
+  }
+
+  return Array.from({ length: 4 }, (_, index) => ({
+    name: `check point #${index + 1}`,
+    result: {
+      isp: "--",
+      ip: "--",
+      country: "--",
+    },
+  }));
+});
+
 onMounted(() => {
   store.loadSettings();
-  resetScrollTop();
+  handleTrayActivated();
   document.documentElement.classList.add(trayPageClass);
   document.body.classList.add(trayPageClass);
   document.addEventListener("visibilitychange", handleVisibilityChange);
-  window.addEventListener("focus", resetScrollTop);
+  window.addEventListener("focus", handleTrayActivated);
   scrollContainer.value?.addEventListener("wheel", handleWheel, { passive: false });
 });
 
 onBeforeUnmount(() => {
   scrollContainer.value?.removeEventListener("wheel", handleWheel);
   document.removeEventListener("visibilitychange", handleVisibilityChange);
-  window.removeEventListener("focus", resetScrollTop);
+  window.removeEventListener("focus", handleTrayActivated);
   document.documentElement.classList.remove(trayPageClass);
   document.body.classList.remove(trayPageClass);
 });
@@ -74,8 +98,13 @@ function resetScrollTop() {
 
 function handleVisibilityChange() {
   if (!document.hidden) {
-    resetScrollTop();
+    handleTrayActivated();
   }
+}
+
+function handleTrayActivated() {
+  resetScrollTop();
+  store.markTrayRefresh();
 }
 
 function handleWheel(event) {
@@ -97,6 +126,32 @@ function handleWheel(event) {
     event.preventDefault();
   }
 }
+
+function dnsValueClass(value) {
+  if (value === "Timeout" || value === "Failed") {
+    return "text-destructive";
+  }
+  if (value === "--") {
+    return "text-muted-foreground";
+  }
+  return "text-foreground";
+}
+
+function flagURL(country) {
+  return countryFlagURL(country);
+}
+
+function normalizeCountryCode(value) {
+  const code = String(value || "").trim().toLowerCase();
+  if (!/^[a-z]{2}$/.test(code)) {
+    return "";
+  }
+  return code;
+}
+
+function myIPFlagURL(code) {
+  return code ? `https://flagcdn.com/w40/${code}.png` : "";
+}
 </script>
 
 <template>
@@ -104,31 +159,109 @@ function handleWheel(event) {
     <div class="w-full overflow-hidden border border-border/70 bg-background/98 shadow-[0_12px_30px_-16px_rgba(15,23,42,0.22)] backdrop-blur-sm">
       <div ref="scrollContainer" class="tray-scroll h-full overflow-y-auto">
         <div class="flex flex-col gap-2 p-1.5">
-          <Table>
-            <TableBody>
-              <TableRow
-                v-for="target in trayTargets"
-                :key="target.id"
-                class="border-none hover:bg-muted/20"
+          <section class="flex flex-col gap-1">
+            <div class="flex items-center justify-between px-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/80">
+              <span>My IP</span>
+              <Spinner v-if="store.myIPLoading" class="size-3.5" />
+            </div>
+
+            <Table>
+              <TableBody>
+                <TableRow class="border-none hover:bg-muted/20">
+                  <TableCell class="py-1.5">
+                    <div class="flex items-center gap-2">
+                      <img
+                        v-if="myIPFlagURL(myIPDisplay.countryCode)"
+                        :src="myIPFlagURL(myIPDisplay.countryCode)"
+                        :alt="myIPDisplay.countryCode.toUpperCase()"
+                        class="h-3.5 w-5 rounded-[2px] border border-[#eaecf0] object-cover"
+                      />
+                      <span v-else class="text-[12px] text-muted-foreground">-</span>
+                      <span class="text-[12px] font-medium">Current IP</span>
+                    </div>
+                  </TableCell>
+                  <TableCell class="w-28 py-1.5 text-right">
+                    <span class="text-[12px] font-medium tabular-nums text-foreground">
+                      {{ myIPDisplay.ip }}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </section>
+
+          <section class="flex flex-col gap-1">
+            <div class="flex items-center justify-between px-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/80">
+              <span>Connectivity</span>
+              <Spinner v-if="store.loading" class="size-3.5" />
+            </div>
+
+            <Table>
+              <TableBody>
+                <TableRow
+                  v-for="target in trayTargets"
+                  :key="target.id"
+                  class="border-none hover:bg-muted/20"
+                >
+                  <TableCell class="py-1.5">
+                    <div class="flex items-center gap-2">
+                      <Avatar class="size-5 rounded-sm" shape="square">
+                        <AvatarImage :src="target.iconUrl" :alt="target.name" />
+                        <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
+                      </Avatar>
+                      <span class="truncate text-[12px] font-medium">{{ target.name }}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell class="w-24 py-1.5 text-right">
+                    <Badge variant="secondary" class="h-5 rounded-sm px-1.5 text-[10px] tabular-nums">
+                      {{ target.latency }}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </section>
+
+          <section class="flex flex-col gap-1">
+            <div class="flex items-center justify-between px-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/80">
+              <span>DNS Test</span>
+              <Spinner v-if="store.dnsLoading" class="size-3.5" />
+            </div>
+
+            <div>
+              <div
+                v-for="checkpoint in dnsCheckpoints"
+                :key="checkpoint.name"
+                class="border-b px-2.5 py-2 last:border-b-0"
               >
-                <TableCell class="py-1.5">
-                  <div class="flex items-center gap-2">
-                    <Avatar class="size-5 rounded-sm" shape="square">
-                      <AvatarImage :src="target.iconUrl" :alt="target.name" />
-                      <AvatarFallback>{{ fallbackLabel(target.name) }}</AvatarFallback>
-                    </Avatar>
-                    <span class="truncate text-[12px] font-medium">{{ target.name }}</span>
+                <div class="text-[12px] font-medium text-foreground">
+                  {{ checkpoint.name }}
+                </div>
+                <div class="mt-1 flex flex-col gap-0.5 text-[11px]">
+                  <div class="flex gap-1.5">
+                    <span class="text-muted-foreground">ISP:</span>
+                    <span class="truncate" :class="dnsValueClass(checkpoint.result.isp)">
+                      {{ checkpoint.result.isp }}
+                    </span>
                   </div>
-                </TableCell>
-                <TableCell class="w-20 py-1.5 text-right">
-                  <Badge variant="secondary" class="h-5 rounded-sm px-1.5 text-[10px] tabular-nums">
-                    <Spinner v-if="store.loading" data-icon="inline-start" />
-                    {{ target.latency }}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+                  <div class="flex gap-1.5">
+                    <span class="text-muted-foreground">IP:</span>
+                    <span class="flex min-w-0 items-center gap-1.5" :class="dnsValueClass(checkpoint.result.ip)">
+                      <img
+                        v-if="flagURL(checkpoint.result.country)"
+                        :src="flagURL(checkpoint.result.country)"
+                        :alt="checkpoint.result.country"
+                        class="h-3 w-4 rounded-[2px] border border-[#eaecf0] object-cover"
+                      />
+                      <span class="truncate">
+                        {{ checkpoint.result.ip }}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <Separator />
 

@@ -21,6 +21,7 @@ type MenuController struct {
 	settings       Settings
 	report         BenchmarkReport
 	dnsReport      DNSTestReport
+	myIPReport     MyIPReport
 	icons          map[string][]byte
 	menuWindow     *application.WebviewWindow
 	settingsWidth  int
@@ -48,7 +49,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 	controller.menuWindow = app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:             "menu",
 		Width:            300,
-		Height:           260,
+		Height:           468,
 		URL:              "/?mode=menu",
 		Frameless:        true,
 		AlwaysOnTop:      true,
@@ -64,6 +65,7 @@ func NewMenuController(app *application.App, service *SiteCheckService, logo []b
 
 	controller.menuWindow.OnWindowEvent(events.Mac.WindowDidBecomeKey, func(event *application.WindowEvent) {
 		controller.service.telemetry.Track("tray_opened", nil)
+		go controller.RunMyIP()
 		go controller.RunBenchmark()
 		go controller.RunDNSBenchmark()
 	})
@@ -104,6 +106,12 @@ func (c *MenuController) UpdateReport(report BenchmarkReport) {
 func (c *MenuController) UpdateDNSReport(report DNSTestReport) {
 	c.mu.Lock()
 	c.dnsReport = report
+	c.mu.Unlock()
+}
+
+func (c *MenuController) UpdateMyIPReport(report MyIPReport) {
+	c.mu.Lock()
+	c.myIPReport = report
 	c.mu.Unlock()
 }
 
@@ -154,6 +162,10 @@ func (c *MenuController) RunBenchmark() {
 
 func (c *MenuController) RunDNSBenchmark() {
 	_, _ = c.service.BenchmarkDNS(TriggerTray)
+}
+
+func (c *MenuController) RunMyIP() {
+	_, _ = c.service.RefreshMyIP()
 }
 
 func (c *MenuController) rebuildMenu() {

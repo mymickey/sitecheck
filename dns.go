@@ -35,9 +35,21 @@ type SurfsharkEntry struct {
 	CountryCode string `json:"CountryCode"`
 }
 
-func generateRandomBase36() string {
-	n, _ := rand.Int(rand.Reader, big.NewInt(1000000000000))
-	return strconv.FormatInt(n.Int64(), 36)
+func generateRandomBase36(length int) string {
+	if length <= 0 {
+		return ""
+	}
+
+	const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+	var builder strings.Builder
+	builder.Grow(length)
+
+	for range length {
+		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(alphabet))))
+		builder.WriteByte(alphabet[n.Int64()])
+	}
+
+	return builder.String()
 }
 
 func isTimeoutError(err error) bool {
@@ -52,21 +64,21 @@ func isTimeoutError(err error) bool {
 }
 
 func generateIPAPIPrefix() string {
-	// current unix time string + jason5ng32 + random base36 substring
-	now := strconv.FormatInt(time.Now().Unix(), 10)
-	random := generateRandomBase36()
+	// current unix millisecond string + jason5ng32 + 9-char random base36 substring
+	now := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	random := generateRandomBase36(9)
 	return fmt.Sprintf("%sjason5ng32%s", now, random)
 }
 
 func generateSurfsharkPrefix() string {
 	// jn32 + random base36 substring
-	random := generateRandomBase36()
+	random := generateRandomBase36(9)
 	return fmt.Sprintf("jn32%s", random)
 }
 
 func fetchIPAPI(ctx context.Context, client *http.Client) (DNSCheckpoint, error) {
 	prefix := generateIPAPIPrefix()
-	urlStr := fmt.Sprintf("https://%s.edns.ip-api.com/json?lang=en", prefix)
+	urlStr := fmt.Sprintf("https://%s.edns.ip-api.com/json", prefix)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {

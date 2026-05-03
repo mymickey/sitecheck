@@ -14,13 +14,15 @@ function configure() {
     Object.freeze(Object.assign($Create.Events, {
         "benchmark-finished": $$createType0,
         "dns-benchmark-finished": $$createType1,
-        "settings-updated": $$createType2,
+        "myip-finished": $$createType2,
+        "settings-updated": $$createType3,
     }));
 }
 
 // Private type creation functions
 const $$createType0 = main$0.BenchmarkReport.createFrom;
 const $$createType1 = main$0.DNSTestReport.createFrom;
-const $$createType2 = main$0.Settings.createFrom;
+const $$createType2 = main$0.MyIPReport.createFrom;
+const $$createType3 = main$0.Settings.createFrom;
 
 configure();

@@ -10,8 +10,21 @@ import (
 
 func TestGenerateIPAPIPrefix(t *testing.T) {
 	prefix := generateIPAPIPrefix()
-	if !strings.Contains(prefix, "jason5ng32") {
-		t.Errorf("generateIPAPIPrefix() = %q, want it to contain 'jason5ng32'", prefix)
+	if len(prefix) != 32 {
+		t.Fatalf("generateIPAPIPrefix() length = %d, want 32", len(prefix))
+	}
+	if prefix[13:23] != "jason5ng32" {
+		t.Fatalf("generateIPAPIPrefix() fixed segment = %q, want %q", prefix[13:23], "jason5ng32")
+	}
+	for _, r := range prefix[:13] {
+		if r < '0' || r > '9' {
+			t.Fatalf("generateIPAPIPrefix() timestamp segment = %q, want milliseconds digits", prefix[:13])
+		}
+	}
+	for _, r := range prefix[23:] {
+		if !(r >= '0' && r <= '9') && !(r >= 'a' && r <= 'z') {
+			t.Fatalf("generateIPAPIPrefix() random segment = %q, want lowercase base36", prefix[23:])
+		}
 	}
 }
 
@@ -19,6 +32,9 @@ func TestGenerateSurfsharkPrefix(t *testing.T) {
 	prefix := generateSurfsharkPrefix()
 	if !strings.HasPrefix(prefix, "jn32") {
 		t.Errorf("generateSurfsharkPrefix() = %q, want prefix 'jn32'", prefix)
+	}
+	if len(prefix) != 13 {
+		t.Fatalf("generateSurfsharkPrefix() length = %d, want 13", len(prefix))
 	}
 }
 

@@ -13,6 +13,7 @@ export {
     DNSCheckpoint,
     DNSResult,
     DNSTestReport,
+    MyIPReport,
     ProbeResult,
     Settings,
     Target

@@ -8,6 +8,7 @@ let toastTimer = 0
 function defaultClientSettings() {
   return {
     intervalMinutes: 10,
+    dnsIntervalHours: 1,
     targets: [],
   }
 }
@@ -16,6 +17,23 @@ function normalizeIntervalMinutes(value) {
   const interval = Number(value)
   if (!Number.isFinite(interval) || interval < 1) return 10
   return Math.min(Math.trunc(interval), 99)
+}
+
+function normalizeDNSIntervalHours(value) {
+  const interval = Number(value)
+  if (!Number.isFinite(interval) || interval < 1) return 1
+  return Math.min(Math.trunc(interval), 99)
+}
+
+function errorText(error) {
+  if (typeof error === "string") return error
+  if (error && typeof error.message === "string") return error.message
+  return String(error)
+}
+
+function isIgnoredBenchmarkError(error) {
+  const text = errorText(error).toLowerCase()
+  return text.includes("benchmark in progress") || text.includes("context canceled")
 }
 
 function normalizeTargetURL(rawURL) {
@@ -58,8 +76,10 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
   const settings = ref(defaultClientSettings())
   const report = shallowRef(null)
   const dnsReport = shallowRef(null)
+  const myIPReport = shallowRef(null)
   const loading = shallowRef(false)
   const dnsLoading = shallowRef(false)
+  const myIPLoading = shallowRef(false)
   const saving = shallowRef(false)
   const message = shallowRef('')
   const messageTone = shallowRef('muted')
@@ -100,6 +120,14 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     }
   }
 
+  function setDNSIntervalHours(value) {
+    const nextInterval = normalizeDNSIntervalHours(value)
+    settings.value = {
+      ...settings.value,
+      dnsIntervalHours: nextInterval,
+    }
+  }
+
   async function updateIntervalMinutes(value) {
     setIntervalMinutes(value)
     saving.value = true
@@ -107,7 +135,20 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
       settings.value = await SiteCheckService.SaveSettings(settings.value)
       showToast(`Updated ${settings.value.intervalMinutes}m interval`, 'success')
     } catch (error) {
-      showToast(String(error), 'danger')
+      showToast(errorText(error), 'danger')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function updateDNSIntervalHours(value) {
+    setDNSIntervalHours(value)
+    saving.value = true
+    try {
+      settings.value = await SiteCheckService.SaveSettings(settings.value)
+      showToast(`Updated ${settings.value.dnsIntervalHours}h interval`, 'success')
+    } catch (error) {
+      showToast(errorText(error), 'danger')
     } finally {
       saving.value = false
     }
@@ -133,7 +174,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
       showToast(`Added ${nextTarget.name} to targets`, 'success')
       return true
     } catch (error) {
-      showToast(String(error), 'danger')
+      showToast(errorText(error), 'danger')
       return false
     } finally {
       saving.value = false
@@ -155,7 +196,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
       showToast('Checkpoint removed', 'success')
       return true
     } catch (error) {
-      showToast(String(error), 'danger')
+      showToast(errorText(error), 'danger')
       return false
     } finally {
       saving.value = false
@@ -186,13 +227,13 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
 
   async function benchmarkDNS() {
     if (dnsLoading.value) return
-    
+
     dnsLoading.value = true
     try {
       dnsReport.value = await SiteCheckService.BenchmarkDNS("manual")
-    } catch (e) {
-      if (e !== "benchmark in progress" && e !== "context canceled") {
-        console.error("DNS Benchmark failed:", e)
+    } catch (error) {
+      if (!isIgnoredBenchmarkError(error)) {
+        setMessage(errorText(error), "danger")
       }
     } finally {
       dnsLoading.value = false
@@ -204,11 +245,24 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     try {
       report.value = await SiteCheckService.Benchmark("manual")
     } catch (error) {
-      setMessage(String(error), 'danger')
+      if (!isIgnoredBenchmarkError(error)) {
+        setMessage(errorText(error), 'danger')
+      }
     } finally {
       loading.value = false
     }
   }
+
+  function markTrayRefresh() {
+    myIPLoading.value = true
+    loading.value = true
+    dnsLoading.value = true
+  }
+
+  Events.On('myip-finished', (event) => {
+    myIPReport.value = event.data
+    myIPLoading.value = false
+  })
 
   Events.On('benchmark-finished', (event) => {
     report.value = event.data
@@ -227,7 +281,9 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
   return {
     settings,
     report,
+    myIPReport,
     loading,
+    myIPLoading,
     saving,
     message,
     messageTone,
@@ -243,7 +299,9 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     saveSettings,
     benchmark,
     benchmarkDNS,
+    updateDNSIntervalHours,
     dnsReport,
     dnsLoading,
+    markTrayRefresh,
   }
 })

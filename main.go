@@ -18,6 +18,7 @@ var appIcon []byte
 func init() {
 	application.RegisterEvent[BenchmarkReport]("benchmark-finished")
 	application.RegisterEvent[DNSTestReport]("dns-benchmark-finished")
+	application.RegisterEvent[MyIPReport]("myip-finished")
 	application.RegisterEvent[Settings]("settings-updated")
 }
 
@@ -64,6 +65,10 @@ func main() {
 	siteCheck.onDNSFinish = func(report DNSTestReport) {
 		menuController.UpdateDNSReport(report)
 		app.Event.Emit("dns-benchmark-finished", report)
+	}
+	siteCheck.onMyIPFinish = func(report MyIPReport) {
+		menuController.UpdateMyIPReport(report)
+		app.Event.Emit("myip-finished", report)
 	}
 	siteCheck.onShowSettings = func() {
 		menuController.ShowSettings()

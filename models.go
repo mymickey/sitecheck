@@ -57,3 +57,9 @@ type DNSTestReport struct {
 	Checkpoints []DNSCheckpoint `json:"checkpoints"`
 	CheckedAt   string          `json:"checkedAt"`
 }
+
+type MyIPReport struct {
+	IP          string `json:"ip"`
+	CountryCode string `json:"countryCode"`
+	CheckedAt   string `json:"checkedAt"`
+}
