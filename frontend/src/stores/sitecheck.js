@@ -103,7 +103,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
     saving.value = true
     try {
       settings.value = await SiteCheckService.SaveSettings(settings.value)
-      showToast(`Go received ${settings.value.intervalMinutes}m interval`, 'success')
+      showToast(`Updated ${settings.value.intervalMinutes}m interval`, 'success')
     } catch (error) {
       showToast(String(error), 'danger')
     } finally {
@@ -128,7 +128,7 @@ export const useSiteCheckStore = defineStore('sitecheck', () => {
         ...settings.value,
         targets: [nextTarget, ...settings.value.targets],
       })
-      showToast(`Go received ${nextTarget.name}`, 'success')
+      showToast(`Added ${nextTarget.name} to targets`, 'success')
       return true
     } catch (error) {
       showToast(String(error), 'danger')
