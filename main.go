@@ -15,6 +15,9 @@ var assets embed.FS
 //go:embed build/appicon.png
 var appIcon []byte
 
+//go:embed build/menubar.svg
+var menubarIcon []byte
+
 func init() {
 	application.RegisterEvent[BenchmarkReport]("benchmark-finished")
 	application.RegisterEvent[DNSTestReport]("dns-benchmark-finished")
@@ -48,7 +51,7 @@ func main() {
 		},
 	})
 
-	menuController := NewMenuController(app, siteCheck, appIcon, settings)
+	menuController := NewMenuController(app, siteCheck, menubarIcon, settings)
 	scheduler := NewBenchmarkScheduler(siteCheck)
 	scheduler.Start(settings.IntervalMinutes, settings.DNSIntervalHours)
 	app.OnShutdown(scheduler.Stop)

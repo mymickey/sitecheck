@@ -179,13 +179,10 @@ function myIPFlagURL(code) {
                         class="h-3.5 w-5 rounded-[2px] border border-[#eaecf0] object-cover"
                       />
                       <span v-else class="text-[12px] text-muted-foreground">-</span>
-                      <span class="text-[12px] font-medium">Current IP</span>
+                      <span class="text-[12px] font-medium tabular-nums text-foreground">
+                        {{ myIPDisplay.ip }}
+                      </span>
                     </div>
-                  </TableCell>
-                  <TableCell class="w-28 py-1.5 text-right">
-                    <span class="text-[12px] font-medium tabular-nums text-foreground">
-                      {{ myIPDisplay.ip }}
-                    </span>
                   </TableCell>
                 </TableRow>
               </TableBody>
