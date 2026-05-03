@@ -6,5 +6,6 @@ build/linux/appimage/build
 build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
 
 # Markdown files
+dns-test-review.md
 *.md
 !README.md
