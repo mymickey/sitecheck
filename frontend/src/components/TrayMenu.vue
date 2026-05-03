@@ -97,13 +97,15 @@ function resetScrollTop() {
 }
 
 function handleVisibilityChange() {
-  if (!document.hidden) {
-    handleTrayActivated();
+  if (document.hidden) {
+    resetScrollTop();
+    return;
   }
+
+  handleTrayActivated();
 }
 
 function handleTrayActivated() {
-  resetScrollTop();
   store.markTrayRefresh();
 }
 
