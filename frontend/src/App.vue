@@ -54,7 +54,7 @@ onMounted(() => {
           <div class="flex h-full flex-col px-4 py-4 pt-6">
             <div class="flex items-center gap-3 px-2 pb-4">
               <Avatar class="size-8 border border-border/70 bg-background" shape="circle">
-                <AvatarImage src="/logo.svg" alt="SiteCheck" />
+                <AvatarImage src="/sitecheck-app.png" alt="SiteCheck" />
                 <AvatarFallback>SC</AvatarFallback>
               </Avatar>
               <div class="flex min-w-0 flex-col gap-0.5">

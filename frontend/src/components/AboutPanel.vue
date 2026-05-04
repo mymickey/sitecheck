@@ -41,7 +41,7 @@ function openExternalURL(url) {
       <CardHeader class="gap-4 pb-3">
         <div class="flex items-center gap-4">
           <Avatar size="base" shape="square">
-            <AvatarImage src="/logo.svg" alt="SiteCheck" />
+            <AvatarImage src="/sitecheck-app.png" alt="SiteCheck" />
             <AvatarFallback>SC</AvatarFallback>
           </Avatar>
           <div class="flex flex-col gap-1">
