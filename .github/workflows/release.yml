@@ -32,20 +32,11 @@ jobs:
       - name: Install Wails v3
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: frontend
+      - name: Build release artifacts
+        run: make dmg
 
-      - name: Test
-        run: go test ./...
-
-      - name: Build app bundle
-        run: wails3 task darwin:package:universal
-
-      - name: Create DMG
+      - name: Create ZIP
         run: |
-          mkdir -p bin/dmg
-          hdiutil create -volname SiteCheck -srcfolder bin/sitecheck.app -ov -format UDZO bin/dmg/SiteCheck.dmg
           ditto -c -k --keepParent bin/sitecheck.app bin/SiteCheck.app.zip
 
       - name: Publish release
