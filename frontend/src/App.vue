@@ -15,7 +15,7 @@ const store = useSiteCheckStore();
 
 const tabs = [
   { id: "connectivity", label: "Connectivity" },
-  { id: "dns", label: "DNS Test" },
+  { id: "dns", label: "DNS Leak Test" },
   { id: "about", label: "About" },
 ];
 

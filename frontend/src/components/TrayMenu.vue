@@ -223,7 +223,7 @@ function myIPFlagURL(code) {
 
           <section class="flex flex-col gap-1">
             <div class="flex items-center justify-between px-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/80">
-              <span>DNS Test</span>
+              <span>DNS Leak Test</span>
               <Spinner v-if="store.dnsLoading" class="size-3.5" />
             </div>
 
