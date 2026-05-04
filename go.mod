@@ -5,7 +5,6 @@ go 1.25
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.78
-	golang.org/x/image v0.35.0
 )
 
 require (
