@@ -4,6 +4,7 @@ frontend/dist
 frontend/node_modules
 build/linux/appimage/build
 build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+.DS_Store
 
 # Markdown files
 dns-test-review.md

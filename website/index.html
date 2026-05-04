@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SiteCheck</title>
+  <meta name="description"
+    content="SiteCheck is a macOS menubar utility for checking connectivity, DNS test results, and your current public IP." />
+  <link rel="icon" type="image/png" href="./assets/sitecheck-app.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="min-h-screen bg-[#1b1b1f] text-white antialiased">
+  <main class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-10 sm:px-10 lg:px-14">
+    <section class="flex flex-1 flex-col justify-center">
+      <div class="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(320px,460px)]">
+        <div class="max-w-2xl">
+          <div class="text-xs uppercase tracking-[0.22em] text-white/45">macOS menubar utility</div>
+          <h1 class="mt-5 text-5xl font-semibold tracking-tight text-white sm:text-6xl">SiteCheck</h1>
+          <p class="mt-6 text-base leading-8 text-white/68 sm:text-lg">
+            SiteCheck is a focused macOS utility for monitoring route quality from your current network path.
+            It helps you check site connectivity, inspect DNS exit results, and view your current public IP directly
+            from the menubar.
+          </p>
+          <div class="mt-6 space-y-2 text-sm leading-7 text-white/52 sm:text-[15px]">
+            <p>Connectivity checks for your selected targets</p>
+            <p>DNS test results with ISP and exit country visibility</p>
+            <p>Fast My IP lookup from the tray menu</p>
+          </div>
+        </div>
+
+        <div class="flex justify-center lg:justify-end">
+          <div class="relative flex items-center justify-center">
+            <div class="absolute h-56 w-56 rounded-full bg-white/10 blur-3xl sm:h-72 sm:w-72"></div>
+            <div class="absolute h-36 w-36 rounded-full bg-white/12 blur-2xl sm:h-44 sm:w-44"></div>
+            <img src="./assets/sitecheck-app.png" alt="SiteCheck Logo"
+              class="relative z-10 w-52 drop-shadow-[0_0_40px_rgba(255,255,255,0.18)] sm:w-72" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer
+      class="flex flex-col gap-3 border-t border-white/10 pt-5 text-sm text-white/58 sm:flex-row sm:items-center sm:justify-between">
+      <a href="https://github.com/mymickey/sitecheck" target="_blank" rel="noreferrer"
+        class="transition hover:text-white">
+        GitHub: github.com/mymickey/sitecheck
+      </a>
+      <a href="https://github.com/mymickey/sitecheck/releases" target="_blank" rel="noreferrer"
+        class="transition hover:text-white">
+        Download: github.com/mymickey/sitecheck/releases
+      </a>
+    </footer>
+  </main>
+</body>
+
+</html>
