@@ -31,3 +31,10 @@ make dmg
 
 `make dmg` creates `bin/dmg/SiteCheck.dmg`.
 
+## License
+
+This software is for **personal and non-commercial use only**. If you intend to use this software for commercial purposes (including but not limited to use within a business, company, or for-profit entity), you must obtain a commercial license.
+
+For commercial licensing inquiries or further information, please contact the author.
+
+
