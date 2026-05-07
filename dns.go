@@ -191,6 +191,9 @@ func fetchSurfshark(ctx context.Context, client *http.Client) ([]DNSCheckpoint, 
 func RunDNSTest(ctx context.Context) DNSTestReport {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		},
 	}
 
 	// Ensure overall timeout

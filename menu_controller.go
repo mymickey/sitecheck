@@ -176,7 +176,12 @@ func (c *MenuController) cachedIcon(iconURL string) []byte {
 }
 
 func (c *MenuController) refreshIcons(targets []Target) {
-	client := &http.Client{Timeout: 2 * time.Second}
+	client := &http.Client{
+		Timeout: 2 * time.Second,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		},
+	}
 	updated := false
 
 	for _, target := range targets {

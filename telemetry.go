@@ -44,7 +44,12 @@ func NewTelemetryClient(appKey string) *TelemetryClient {
 	return &TelemetryClient{
 		appKey:     appKey,
 		host:       telemetryHost(appKey),
-		httpClient: &http.Client{Timeout: 4 * time.Second},
+		httpClient: &http.Client{
+			Timeout: 4 * time.Second,
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+			},
+		},
 		sessionID:  newTelemetrySessionID(),
 		osVersion:  macOSVersion(),
 		locale:     telemetryLocale(),

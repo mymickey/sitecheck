@@ -76,7 +76,12 @@ func fetchMyIPOnce(ctx context.Context, client *http.Client) (MyIPReport, error)
 }
 
 func FetchMyIPUntilSuccess(ctx context.Context) (MyIPReport, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		},
+	}
 
 	for {
 		report, err := fetchMyIPOnce(ctx, client)

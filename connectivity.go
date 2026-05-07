@@ -16,7 +16,12 @@ type ConnectivityMonitor struct {
 
 func NewConnectivityMonitor(client *http.Client) *ConnectivityMonitor {
 	if client == nil {
-		client = &http.Client{Timeout: probeTimeout}
+		client = &http.Client{
+			Timeout: probeTimeout,
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+			},
+		}
 	}
 	return &ConnectivityMonitor{client: client}
 }
