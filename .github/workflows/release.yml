@@ -33,7 +33,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Wails v3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+        run: |
+          git clone --depth 1 https://github.com/wailsapp/wails.git
+          cd wails/v3/cmd/wails3
+          go install .
 
       - name: Build release artifacts
         run: make dmg
